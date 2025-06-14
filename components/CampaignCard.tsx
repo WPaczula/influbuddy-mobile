@@ -3,7 +3,7 @@ import { Campaign } from '@/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import StatusBadge from './StatusBadge';
-import { Calendar, Clock } from 'lucide-react-native';
+import { Calendar, Building2 } from 'lucide-react-native';
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -73,25 +73,16 @@ export default function CampaignCard({ campaign, onPress }: CampaignCardProps) {
         <StatusBadge status={campaign.status} size="small" />
       </View>
 
-      {/* Description */}
-      {campaign.description && (
-        <Text style={[styles.description, { color: theme.colors.textSecondary }]} numberOfLines={2}>
-          {campaign.description}
+      {/* Partner info */}
+      <View style={styles.partnerSection}>
+        <Building2 size={16} color={theme.colors.textSecondary} />
+        <Text style={[styles.partnerText, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+          {campaign.partner.company}
         </Text>
-      )}
+      </View>
 
       {/* Footer with deadline */}
       <View style={styles.footer}>
-        {/* Partner info on the left */}
-        {campaign.partner && (
-          <View style={styles.partnerContainer}>
-            <Text style={[styles.partnerText, { color: theme.colors.textTertiary }]} numberOfLines={1}>
-              {campaign.partner.company}
-            </Text>
-          </View>
-        )}
-
-        {/* Deadline info on the right */}
         {deadlineInfo && (
           <View style={styles.deadlineContainer}>
             <View style={[styles.deadlineContent, deadlineInfo.isUrgent && styles.urgentDeadline]}>
@@ -130,7 +121,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
     gap: 12,
   },
   title: {
@@ -139,24 +130,22 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     lineHeight: 20,
   },
-  description: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    lineHeight: 18,
+  partnerSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 12,
+  },
+  partnerText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    lineHeight: 18,
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'flex-end',
-    gap: 12,
-  },
-  partnerContainer: {
-    flex: 1,
-  },
-  partnerText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
   },
   deadlineContainer: {
     alignItems: 'flex-end',
