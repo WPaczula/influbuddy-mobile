@@ -528,25 +528,6 @@ const CampaignDetailsScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Quick Actions */}
-          <View style={styles.quickActions}>
-            <TouchableOpacity style={[styles.quickAction, { backgroundColor: theme.colors.surface }]}>
-              <ShareIcon size={20} color={theme.colors.primary} />
-              <Text style={[styles.quickActionText, { color: theme.colors.text }]}>Quick Share</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={[styles.quickAction, { backgroundColor: theme.colors.surface }]}>
-              <FileText size={20} color={theme.colors.primary} />
-              <Text style={[styles.quickActionText, { color: theme.colors.text }]}>Export PDF</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={[styles.quickAction, { backgroundColor: theme.colors.surface }]}>
-              <Send size={20} color={theme.colors.primary} />
-              <Text style={[styles.quickActionText, { color: theme.colors.text }]}>Email Report</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* Action Button */}
         {getStatusActions()}
       </ScrollView>
