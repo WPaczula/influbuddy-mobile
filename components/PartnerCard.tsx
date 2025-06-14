@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Partner } from '@/types';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Building2, Mail, Phone, Globe, TrendingUp } from 'lucide-react-native';
+import { Building2, TrendingUp } from 'lucide-react-native';
 
 interface PartnerCardProps {
   partner: Partner;
@@ -25,6 +25,7 @@ export default function PartnerCard({ partner, onPress }: PartnerCardProps) {
       style={[styles.card, { 
         backgroundColor: theme.colors.surface, 
         borderColor: theme.colors.borderLight,
+        shadowColor: theme.colors.shadow,
       }]} 
       onPress={onPress} 
       activeOpacity={0.7}
@@ -81,33 +82,6 @@ export default function PartnerCard({ partner, onPress }: PartnerCardProps) {
             <Text style={[styles.campaigns, { color: theme.colors.textSecondary }]}>{partner.activeCampaigns} active</Text>
           </View>
         </View>
-
-        <View style={styles.details}>
-          <View style={styles.detailItem}>
-            <View style={[styles.detailIcon, { backgroundColor: '#EBF8FF' }]}>
-              <Mail size={12} color="#63B3ED" />
-            </View>
-            <Text style={[styles.detailText, { color: theme.colors.textSecondary }]} numberOfLines={1}>{partner.email}</Text>
-          </View>
-          
-          {partner.phone && (
-            <View style={styles.detailItem}>
-              <View style={[styles.detailIcon, { backgroundColor: '#F0FFF4' }]}>
-                <Phone size={12} color="#68D391" />
-              </View>
-              <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>{partner.phone}</Text>
-            </View>
-          )}
-          
-          {partner.website && (
-            <View style={styles.detailItem}>
-              <View style={[styles.detailIcon, { backgroundColor: '#FFFAF0' }]}>
-                <Globe size={12} color="#F6AD55" />
-              </View>
-              <Text style={[styles.detailText, { color: theme.colors.textSecondary }]} numberOfLines={1}>{partner.website}</Text>
-            </View>
-          )}
-        </View>
       </View>
     </TouchableOpacity>
   );
@@ -121,7 +95,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
     // Enhanced shadow
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 4,
@@ -152,7 +125,6 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
   },
   avatar: {
     width: 56,
@@ -209,25 +181,5 @@ const styles = StyleSheet.create({
   campaigns: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-  },
-  details: {
-    gap: 12,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  detailIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  detailText: {
-    fontSize: 13,
-    fontFamily: 'Inter-Medium',
-    flex: 1,
   },
 });

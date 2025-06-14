@@ -91,16 +91,6 @@ export default function PartnerCardSkeleton() {
             <SkeletonBox width={50} height={12} style={{ marginTop: 4 }} />
           </View>
         </View>
-
-        {/* Details section skeleton */}
-        <View style={styles.details}>
-          {Array.from({ length: 3 }).map((_, index) => (
-            <View key={index} style={styles.detailItem}>
-              <SkeletonBox width={24} height={24} style={{ borderRadius: 6, marginRight: 12 }} />
-              <SkeletonBox width="70%" height={13} />
-            </View>
-          ))}
-        </View>
       </View>
     </View>
   );
@@ -128,7 +118,6 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
   },
   info: {
     flex: 1,
@@ -144,13 +133,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 4,
-  },
-  details: {
-    gap: 12,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   shimmer: {
     position: 'absolute',
