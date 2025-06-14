@@ -7,7 +7,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import StatsCard from '@/components/StatsCard';
+import StatsCardSkeleton from '@/components/StatsCardSkeleton';
 import CampaignCard from '@/components/CampaignCard';
+import CampaignCardSkeleton from '@/components/CampaignCardSkeleton';
+import HeaderSkeleton from '@/components/HeaderSkeleton';
 import { DollarSign, ChartBar as BarChart3, Users, Clock, Sparkles, TrendingUp } from 'lucide-react-native';
 
 export default function DashboardScreen() {
@@ -53,150 +56,184 @@ export default function DashboardScreen() {
     router.push(`/campaigns/${campaignId}`);
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>{t.loading}</Text>
+  const renderLoadingState = () => (
+    <ScrollView 
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Header skeleton */}
+      <HeaderSkeleton />
+
+      <View style={styles.contentContainer}>
+        {/* Stats section skeleton */}
+        <View style={styles.statsSection}>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionTitleSkeleton, { backgroundColor: theme.colors.borderLight }]} />
+            <View style={[styles.iconSkeleton, { backgroundColor: theme.colors.borderLight }]} />
+          </View>
+          
+          <View style={styles.statsGrid}>
+            <View style={styles.statsRow}>
+              <StatsCardSkeleton />
+              <StatsCardSkeleton />
+            </View>
+            <View style={styles.statsRow}>
+              <StatsCardSkeleton />
+              <StatsCardSkeleton />
+            </View>
+          </View>
         </View>
-      </SafeAreaView>
-    );
-  }
+
+        {/* Recent campaigns section skeleton */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionTitleSkeleton, { backgroundColor: theme.colors.borderLight }]} />
+          </View>
+          
+          <View style={styles.campaignsList}>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <CampaignCardSkeleton key={index} />
+            ))}
+          </View>
+        </View>
+      </View>
+    </ScrollView>
+  );
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header with Gradient */}
-        <LinearGradient
-          colors={['#D6BCFA', '#B794F6']} // Softer purple gradients
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.headerGradient}
+      {loading ? renderLoadingState() : (
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
         >
-          <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <View style={styles.greetingSection}>
-                <Text style={styles.greeting}>{t.goodMorning}</Text>
-                <Text style={styles.subtitle}>{t.dashboardSubtitle}</Text>
-              </View>
-              <View style={styles.headerIcon}>
-                <Sparkles size={28} color="white" />
+          {/* Header with Gradient */}
+          <LinearGradient
+            colors={['#D6BCFA', '#B794F6']} // Softer purple gradients
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerGradient}
+          >
+            <View style={styles.header}>
+              <View style={styles.headerContent}>
+                <View style={styles.greetingSection}>
+                  <Text style={styles.greeting}>{t.goodMorning}</Text>
+                  <Text style={styles.subtitle}>{t.dashboardSubtitle}</Text>
+                </View>
+                <View style={styles.headerIcon}>
+                  <Sparkles size={28} color="white" />
+                </View>
               </View>
             </View>
-          </View>
-        </LinearGradient>
+          </LinearGradient>
 
-        <View style={styles.contentContainer}>
-          {/* Enhanced Stats Grid */}
-          <View style={styles.statsSection}>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.overview}</Text>
-              <TrendingUp size={20} color={theme.colors.primary} />
-            </View>
-            
-            <View style={styles.statsGrid}>
-              <View style={styles.statsRow}>
-                <StatsCard
-                  icon={<DollarSign size={24} color="white" />}
-                  title={t.totalEarnings}
-                  value={formatCurrency(stats.totalEarnings)}
-                  color="green"
-                />
-                <StatsCard
-                  icon={<BarChart3 size={24} color="white" />}
-                  title={t.activeCampaigns}
-                  value={stats.activeCampaigns}
-                  color="blue"
-                />
-              </View>
-              <View style={styles.statsRow}>
-                <StatsCard
-                  icon={<Users size={24} color="white" />}
-                  title={t.totalPartners}
-                  value={stats.totalPartners}
-                  color="purple"
-                />
-                <StatsCard
-                  icon={<Clock size={24} color="white" />}
-                  title={t.dueThisWeek}
-                  value={stats.upcomingDeadlines}
-                  color="orange"
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Upcoming Deadlines */}
-          {upcomingDeadlines.length > 0 && (
-            <View style={styles.section}>
+          <View style={styles.contentContainer}>
+            {/* Enhanced Stats Grid */}
+            <View style={styles.statsSection}>
               <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.upcomingDeadlines}</Text>
-                <View style={[styles.urgentBadge, { backgroundColor: '#FED7D7' }]}>
-                  <Clock size={14} color="#FC8181" />
-                  <Text style={[styles.urgentBadgeText, { color: '#FC8181' }]}>{t.urgent}</Text>
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.overview}</Text>
+                <TrendingUp size={20} color={theme.colors.primary} />
+              </View>
+              
+              <View style={styles.statsGrid}>
+                <View style={styles.statsRow}>
+                  <StatsCard
+                    icon={<DollarSign size={24} color="white" />}
+                    title={t.totalEarnings}
+                    value={formatCurrency(stats.totalEarnings)}
+                    color="green"
+                  />
+                  <StatsCard
+                    icon={<BarChart3 size={24} color="white" />}
+                    title={t.activeCampaigns}
+                    value={stats.activeCampaigns}
+                    color="blue"
+                  />
+                </View>
+                <View style={styles.statsRow}>
+                  <StatsCard
+                    icon={<Users size={24} color="white" />}
+                    title={t.totalPartners}
+                    value={stats.totalPartners}
+                    color="purple"
+                  />
+                  <StatsCard
+                    icon={<Clock size={24} color="white" />}
+                    title={t.dueThisWeek}
+                    value={stats.upcomingDeadlines}
+                    color="orange"
+                  />
                 </View>
               </View>
-              <View style={styles.campaignsList}>
-                {upcomingDeadlines.map(campaign => {
-                  const partner = partners.find(p => p.id === campaign.partnerId);
-                  return partner ? (
-                    <CampaignCard
-                      key={campaign.id}
-                      campaign={campaign}
-                      partner={partner}
-                      onPress={() => handleCampaignPress(campaign.id)}
-                    />
-                  ) : null;
-                })}
-              </View>
             </View>
-          )}
 
-          {/* Recent Campaigns */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.recentCampaigns}</Text>
-            </View>
-            
-            {recentCampaigns.length > 0 ? (
-              <View style={styles.campaignsList}>
-                {recentCampaigns.map(campaign => {
-                  const partner = partners.find(p => p.id === campaign.partnerId);
-                  return partner ? (
-                    <CampaignCard
-                      key={campaign.id}
-                      campaign={campaign}
-                      partner={partner}
-                      onPress={() => handleCampaignPress(campaign.id)}
-                    />
-                  ) : null;
-                })}
-              </View>
-            ) : (
-              <View style={[styles.emptyState, { 
-                backgroundColor: theme.colors.surface, 
-                borderColor: theme.colors.borderLight 
-              }]}>
-                <View style={[styles.emptyIcon, { backgroundColor: theme.isDark ? '#553C9A' : '#FAF5FF' }]}>
-                  <Sparkles size={32} color={theme.colors.primary} />
+            {/* Upcoming Deadlines */}
+            {upcomingDeadlines.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.upcomingDeadlines}</Text>
+                  <View style={[styles.urgentBadge, { backgroundColor: '#FED7D7' }]}>
+                    <Clock size={14} color="#FC8181" />
+                    <Text style={[styles.urgentBadgeText, { color: '#FC8181' }]}>{t.urgent}</Text>
+                  </View>
                 </View>
-                <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
-                  {t.readyToStart}
-                </Text>
-                <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                  {t.createFirstCampaign}
-                </Text>
+                <View style={styles.campaignsList}>
+                  {upcomingDeadlines.map(campaign => {
+                    const partner = partners.find(p => p.id === campaign.partnerId);
+                    return partner ? (
+                      <CampaignCard
+                        key={campaign.id}
+                        campaign={campaign}
+                        onPress={() => handleCampaignPress(campaign.id)}
+                      />
+                    ) : null;
+                  })}
+                </View>
               </View>
             )}
+
+            {/* Recent Campaigns */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.recentCampaigns}</Text>
+              </View>
+              
+              {recentCampaigns.length > 0 ? (
+                <View style={styles.campaignsList}>
+                  {recentCampaigns.map(campaign => {
+                    const partner = partners.find(p => p.id === campaign.partnerId);
+                    return partner ? (
+                      <CampaignCard
+                        key={campaign.id}
+                        campaign={campaign}
+                        onPress={() => handleCampaignPress(campaign.id)}
+                      />
+                    ) : null;
+                  })}
+                </View>
+              ) : (
+                <View style={[styles.emptyState, { 
+                  backgroundColor: theme.colors.surface, 
+                  borderColor: theme.colors.borderLight 
+                }]}>
+                  <View style={[styles.emptyIcon, { backgroundColor: theme.isDark ? '#553C9A' : '#FAF5FF' }]}>
+                    <Sparkles size={32} color={theme.colors.primary} />
+                  </View>
+                  <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
+                    {t.readyToStart}
+                  </Text>
+                  <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                    {t.createFirstCampaign}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -205,15 +242,6 @@ function createStyles(theme: any) {
   return StyleSheet.create({
     container: {
       flex: 1,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loadingText: {
-      fontSize: 16,
-      fontFamily: 'Inter-Medium',
     },
     headerGradient: {
       marginHorizontal: 20,
@@ -268,6 +296,16 @@ function createStyles(theme: any) {
     sectionTitle: {
       fontSize: 22,
       fontFamily: 'Inter-Bold',
+    },
+    sectionTitleSkeleton: {
+      width: 120,
+      height: 22,
+      borderRadius: 6,
+    },
+    iconSkeleton: {
+      width: 20,
+      height: 20,
+      borderRadius: 4,
     },
     urgentBadge: {
       flexDirection: 'row',
