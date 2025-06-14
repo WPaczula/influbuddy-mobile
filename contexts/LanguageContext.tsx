@@ -272,6 +272,7 @@ export interface Translations {
   campaignUpdateIntro: string; // "I'm giving you an update about our campaign - {{campaignName}}. Please find links to my posts below:"
   campaignUpdateClosing: string; // "Best"
   campaignUpdateSignature: string; // "{{userName}}"
+  noPostsSharedYet: string; // "No posts have been shared yet."
 }
 
 const englishTranslations: Translations = {
@@ -543,6 +544,7 @@ const englishTranslations: Translations = {
   campaignUpdateIntro: 'I\'m giving you an update about our campaign - {{campaignName}}. Please find links to my posts below:',
   campaignUpdateClosing: 'Best',
   campaignUpdateSignature: '{{userName}}',
+  noPostsSharedYet: 'No posts have been shared yet.',
 };
 
 const polishTranslations: Translations = {
@@ -814,6 +816,7 @@ const polishTranslations: Translations = {
   campaignUpdateIntro: 'Przesyłam aktualizację dotyczącą naszej kampanii - {{campaignName}}. Poniżej znajdziesz linki do moich postów:',
   campaignUpdateClosing: 'Pozdrawiam',
   campaignUpdateSignature: '{{userName}}',
+  noPostsSharedYet: 'Nie udostępniono jeszcze żadnych postów.',
 };
 
 const translations = {

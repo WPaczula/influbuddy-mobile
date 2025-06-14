@@ -256,7 +256,7 @@ const CampaignDetailsScreen: React.FC = () => {
       });
       summary += '\n';
     } else {
-      summary += 'No posts have been shared yet.\n\n';
+      summary += t.noPostsSharedYet + '\n\n';
     }
 
     summary += t.campaignUpdateClosing + '\n';
