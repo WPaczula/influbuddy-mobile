@@ -461,29 +461,82 @@ const CampaignDetailsScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Campaign Summary Section */}
+        {/* Enhanced Campaign Summary Section */}
         <View style={styles.summarySection}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.campaignSummary}</Text>
-          <View style={[styles.summaryCard, { backgroundColor: theme.colors.surface }]}>
+          
+          {/* Main Summary Card */}
+          <View style={[styles.summaryMainCard, { backgroundColor: theme.colors.surface }]}>
             <View style={styles.summaryHeader}>
-              <FileText size={24} color={theme.colors.primary} />
-              <View style={styles.summaryInfo}>
-                <Text style={[styles.summaryTitle, { color: theme.colors.text }]}>{t.generateReport}</Text>
-                <Text style={[styles.summarySubtitle, { color: theme.colors.textSecondary }]}>
-                  {t.createSummary} {campaign.partner.company}
+              <View style={[styles.summaryIconContainer, { backgroundColor: theme.colors.primaryLight }]}>
+                <FileText size={28} color={theme.colors.primary} />
+              </View>
+              <View style={styles.summaryHeaderText}>
+                <Text style={[styles.summaryMainTitle, { color: theme.colors.text }]}>Generate Campaign Report</Text>
+                <Text style={[styles.summaryMainSubtitle, { color: theme.colors.textSecondary }]}>
+                  Create a professional summary to share with {campaign.partner.company}
                 </Text>
               </View>
             </View>
-            <View style={styles.summaryActions}>
-              <TouchableOpacity style={[styles.previewButton, { backgroundColor: theme.colors.primaryLight }]} onPress={handleGenerateSummary}>
-                <Eye size={16} color={theme.colors.primary} />
-                <Text style={[styles.previewButtonText, { color: theme.colors.primary }]}>{t.preview} podsumowania</Text>
+
+            {/* Summary Features */}
+            <View style={styles.summaryFeatures}>
+              <View style={styles.summaryFeature}>
+                <View style={[styles.featureIcon, { backgroundColor: theme.colors.successLight }]}>
+                  <CheckCircle size={16} color={theme.colors.success} />
+                </View>
+                <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>Campaign timeline & status</Text>
+              </View>
+              <View style={styles.summaryFeature}>
+                <View style={[styles.featureIcon, { backgroundColor: theme.colors.blueLight }]}>
+                  <Building2 size={16} color={theme.colors.blue} />
+                </View>
+                <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>Partner information</Text>
+              </View>
+              <View style={styles.summaryFeature}>
+                <View style={[styles.featureIcon, { backgroundColor: theme.colors.orangeLight }]}>
+                  <ExternalLink size={16} color={theme.colors.orange} />
+                </View>
+                <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>Social media links</Text>
+              </View>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.summaryMainActions}>
+              <TouchableOpacity 
+                style={[styles.previewButton, { backgroundColor: theme.colors.borderLight }]} 
+                onPress={handleGenerateSummary}
+              >
+                <Eye size={18} color={theme.colors.textSecondary} />
+                <Text style={[styles.previewButtonText, { color: theme.colors.textSecondary }]}>Preview Report</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.shareButton, { backgroundColor: theme.colors.primary }]} onPress={handleShareSummary}>
-                <Send size={16} color="white" />
-                <Text style={styles.shareButtonText}>{t.shareReport}</Text>
+              
+              <TouchableOpacity 
+                style={[styles.shareMainButton, { backgroundColor: theme.colors.primary }]} 
+                onPress={handleShareSummary}
+              >
+                <Send size={18} color="white" />
+                <Text style={styles.shareMainButtonText}>Share Report</Text>
               </TouchableOpacity>
             </View>
+          </View>
+
+          {/* Quick Actions */}
+          <View style={styles.quickActions}>
+            <TouchableOpacity style={[styles.quickAction, { backgroundColor: theme.colors.surface }]}>
+              <ShareIcon size={20} color={theme.colors.primary} />
+              <Text style={[styles.quickActionText, { color: theme.colors.text }]}>Quick Share</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={[styles.quickAction, { backgroundColor: theme.colors.surface }]}>
+              <FileText size={20} color={theme.colors.primary} />
+              <Text style={[styles.quickActionText, { color: theme.colors.text }]}>Export PDF</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={[styles.quickAction, { backgroundColor: theme.colors.surface }]}>
+              <Send size={20} color={theme.colors.primary} />
+              <Text style={[styles.quickActionText, { color: theme.colors.text }]}>Email Report</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -900,33 +953,73 @@ function createStyles(theme: any) {
       textAlign: 'center',
       maxWidth: 240,
     },
+
+    // Enhanced Summary Section Styles
     summarySection: {
-      marginBottom: 24,
+      marginBottom: 32,
     },
-    summaryCard: {
-      borderRadius: 16,
-      padding: 20,
+    summaryMainCard: {
+      borderRadius: 20,
+      padding: 24,
+      marginBottom: 16,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 6,
     },
     summaryHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 16,
-      gap: 16,
+      marginBottom: 20,
     },
-    summaryInfo: {
+    summaryIconContainer: {
+      width: 56,
+      height: 56,
+      borderRadius: 16,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 16,
+    },
+    summaryHeaderText: {
       flex: 1,
     },
-    summaryTitle: {
-      fontSize: 18,
-      fontFamily: 'Inter-SemiBold',
+    summaryMainTitle: {
+      fontSize: 20,
+      fontFamily: 'Inter-Bold',
       marginBottom: 4,
+      lineHeight: 24,
     },
-    summarySubtitle: {
+    summaryMainSubtitle: {
       fontSize: 14,
       fontFamily: 'Inter-Regular',
       lineHeight: 20,
     },
-    summaryActions: {
+    summaryFeatures: {
+      marginBottom: 24,
+      gap: 12,
+    },
+    summaryFeature: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    featureIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    featureText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+      flex: 1,
+    },
+    summaryMainActions: {
       flexDirection: 'row',
       gap: 12,
     },
@@ -935,28 +1028,46 @@ function createStyles(theme: any) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 12,
-      borderRadius: 8,
+      paddingVertical: 14,
+      borderRadius: 12,
       gap: 8,
     },
     previewButtonText: {
-      fontSize: 14,
+      fontSize: 15,
       fontFamily: 'Inter-SemiBold',
     },
-    shareButton: {
+    shareMainButton: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 12,
-      borderRadius: 8,
+      paddingVertical: 14,
+      borderRadius: 12,
       gap: 8,
     },
-    shareButtonText: {
-      fontSize: 14,
+    shareMainButtonText: {
+      fontSize: 15,
       fontFamily: 'Inter-SemiBold',
       color: 'white',
     },
+    quickActions: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    quickAction: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 16,
+      paddingHorizontal: 12,
+      borderRadius: 12,
+      gap: 8,
+    },
+    quickActionText: {
+      fontSize: 12,
+      fontFamily: 'Inter-SemiBold',
+      textAlign: 'center',
+    },
+
     actionButton: {
       flexDirection: 'row',
       alignItems: 'center',
