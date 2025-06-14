@@ -218,8 +218,7 @@ const CampaignDetailsScreen: React.FC = () => {
     try {
       const updatedCampaign = await campaignsService.addPost(
         campaign.id,
-        postForm.url,
-        postForm.description
+        postForm.url
       );
       setCampaign(updatedCampaign);
       setShowAddPost(false);
@@ -240,19 +239,21 @@ const CampaignDetailsScreen: React.FC = () => {
   const generateSummary = () => {
     if (!campaign) return '';
 
-    const completedDate = campaign.completedDate
-      ? new Date(campaign.completedDate).toLocaleDateString()
-      : 'Jeszcze nie ukończono';
+    const startDate = new Date(campaign.createdAt).toLocaleDateString();
+    const deadline = campaign.deadline ? new Date(campaign.deadline).toLocaleDateString() : 'No deadline';
+    const status = campaign.status.toLowerCase();
+    const partnerName = campaign.partner.name;
+    const partnerCompany = campaign.partner.company;
 
-    let summary = `Cześć ${campaign.partner.name}!\n\n`;
+    let summary = `Campaign: ${campaign.title}\n`;
+    summary += `Partner: ${partnerName} (${partnerCompany})\n`;
+    summary += `Status: ${status}\n`;
+    summary += `Start Date: ${startDate}\n`;
+    summary += `Deadline: ${deadline}\n`;
 
-    if (campaign.status === 'completed' && campaign.completedDate) {
-      summary += `Kampania "${campaign.title}" została zakończona ${completedDate}.\n\n`;
-    } else {
-      summary += `Kampania "${campaign.title}" jest ${campaign.status === 'in-progress' ? 'w trakcie' : 'nie rozpoczęta'}.\n\n`;
+    if (campaign.description) {
+      summary += `\nDescription:\n${campaign.description}\n`;
     }
-
-    summary += `Pozdrawiam\n${campaign.partner.name}`;
 
     return summary;
   };
@@ -266,10 +267,10 @@ const CampaignDetailsScreen: React.FC = () => {
       const summary = generateSummary();
       await Share.share({
         message: summary,
-        title: `Aktualizacja kampanii: ${campaign.title}`,
+        title: `Campaign Update: ${campaign?.title || 'Campaign'}`
       });
     } catch (error) {
-      Alert.alert(t.error, 'Nie udało się udostępnić podsumowania');
+      Alert.alert('Error', 'Failed to share summary');
     }
   };
 
@@ -333,12 +334,10 @@ const CampaignDetailsScreen: React.FC = () => {
           <View style={styles.campaignHeader}>
             <View style={styles.titleSection}>
               <Text style={[styles.title, { color: theme.colors.text }]}>{campaign.title}</Text>
-              {campaign.partner && (
-                <View style={styles.partnerInfo}>
-                  <Building2 size={16} color={theme.colors.textSecondary} />
-                  <Text style={[styles.partnerName, { color: theme.colors.textSecondary }]}>{campaign.partner.name}</Text>
-                </View>
-              )}
+              <View style={styles.partnerInfo}>
+                <Building2 size={16} color={theme.colors.textSecondary} />
+                <Text style={[styles.partnerName, { color: theme.colors.textSecondary }]}>{campaign.partner.name}</Text>
+              </View>
             </View>
             <StatusBadge status={campaign.status} showLabel />
           </View>
