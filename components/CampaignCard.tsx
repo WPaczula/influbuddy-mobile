@@ -89,7 +89,7 @@ export default function CampaignCard({ campaign, onPress }: CampaignCardProps) {
             }
           ]}>
             <Calendar size={14} color={deadlineInfo.urgencyColor} />
-            <Text style={[styles.deadlineText, { color: deadlineInfo.urgencyColor }]}>
+            <Text style={[styles.deadlineText, { color: deadlineInfo.urgencyColor }]} numberOfLines={1}>
               {deadlineInfo.formattedDate}
             </Text>
           </View>
@@ -131,12 +131,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 12,
+    minHeight: 20, // Ensure consistent height
   },
   companySection: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     flex: 1,
+    minHeight: 20, // Ensure consistent height
   },
   companyText: {
     fontSize: 14,
@@ -153,10 +155,13 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 1,
     borderColor: 'transparent',
+    minWidth: 80, // Ensure consistent width
+    justifyContent: 'center',
   },
   deadlineText: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: 'Inter-SemiBold',
-    lineHeight: 16,
+    lineHeight: 14,
+    textAlign: 'center',
   },
 });

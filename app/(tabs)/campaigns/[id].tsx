@@ -6,7 +6,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useState, useEffect } from 'react';
 import { Campaign } from '@/types';
-import { ArrowLeft, Calendar, DollarSign, ExternalLink, Building2, CircleCheck as CheckCircle, Clock, CirclePlay as PlayCircle, CreditCard as Edit, Trash2, Plus, Eye, Heart, MessageCircle, Share as ShareIcon, X, Link as LinkIcon, FileText, Send, Instagram, Youtube, Twitter, Globe } from 'lucide-react-native';
+import { ArrowLeft, Calendar, DollarSign, ExternalLink, Building2, CircleCheck as CheckCircle, Clock, CirclePlay as PlayCircle, PenTool, Trash2, Plus, Eye, Heart, MessageCircle, Share as ShareIcon, X, Link as LinkIcon, FileText, Send, Instagram, Youtube, Twitter, Globe } from 'lucide-react-native';
 import { campaignsService } from '@/services/campaigns';
 import StatusBadge from '@/components/StatusBadge';
 import CampaignDetailsSkeleton from '@/components/CampaignDetailsSkeleton';
@@ -320,7 +320,7 @@ const CampaignDetailsScreen: React.FC = () => {
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>{t.campaignDetails}</Text>
         <TouchableOpacity style={[styles.headerButton, { backgroundColor: theme.colors.borderLight }]} onPress={handleEditCampaign}>
-          <Edit size={24} color={theme.colors.textSecondary} />
+          <PenTool size={20} color={theme.colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
@@ -657,6 +657,10 @@ function createStyles(theme: any) {
     headerButton: {
       padding: 8,
       borderRadius: 8,
+      width: 40,
+      height: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     headerTitle: {
       fontSize: 18,
