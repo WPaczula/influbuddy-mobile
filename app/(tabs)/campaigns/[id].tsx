@@ -10,6 +10,7 @@ import { ArrowLeft, Calendar, DollarSign, ExternalLink, Building2, CircleCheck a
 import { campaignsService } from '@/services/campaigns';
 import StatusBadge from '@/components/StatusBadge';
 import CampaignDetailsSkeleton from '@/components/CampaignDetailsSkeleton';
+import { useAuth } from '@/contexts/FirebaseAuthContext';
 
 interface AddPostForm {
   url: string;
@@ -21,6 +22,7 @@ interface AddPostForm {
 const CampaignDetailsScreen: React.FC = () => {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
@@ -237,23 +239,28 @@ const CampaignDetailsScreen: React.FC = () => {
   };
 
   const generateSummary = () => {
-    if (!campaign) return '';
+    if (!campaign || !user) return '';
 
-    const startDate = new Date(campaign.createdAt).toLocaleDateString();
-    const deadline = campaign.deadline ? new Date(campaign.deadline).toLocaleDateString() : 'No deadline';
-    const status = campaign.status.toLowerCase();
     const partnerName = campaign.partner.name;
-    const partnerCompany = campaign.partner.company;
+    const campaignName = campaign.title;
+    const userName = user.name;
 
-    let summary = `Campaign: ${campaign.title}\n`;
-    summary += `Partner: ${partnerName} (${partnerCompany})\n`;
-    summary += `Status: ${status}\n`;
-    summary += `Start Date: ${startDate}\n`;
-    summary += `Deadline: ${deadline}\n`;
+    // Build the summary using the template
+    let summary = t.campaignUpdateGreeting.replace('{{partnerName}}', partnerName) + '\n\n';
+    summary += t.campaignUpdateIntro.replace('{{campaignName}}', campaignName) + '\n\n';
 
-    if (campaign.description) {
-      summary += `\nDescription:\n${campaign.description}\n`;
+    // Add social media links if available
+    if (campaign.socialLinks && campaign.socialLinks.length > 0) {
+      campaign.socialLinks.forEach((link, index) => {
+        summary += `${index + 1}. ${link.url}\n`;
+      });
+      summary += '\n';
+    } else {
+      summary += 'No posts have been shared yet.\n\n';
     }
+
+    summary += t.campaignUpdateClosing + '\n';
+    summary += t.campaignUpdateSignature.replace('{{userName}}', userName);
 
     return summary;
   };
@@ -702,7 +709,7 @@ const CampaignDetailsScreen: React.FC = () => {
                 onPress={handleShareSummary}
               >
                 <Send size={16} color="white" />
-                <Text style={styles.summaryShareButtonText}>Udostępnij partnerowi</Text>
+                <Text style={styles.summaryShareButtonText}>Share with Partner</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>

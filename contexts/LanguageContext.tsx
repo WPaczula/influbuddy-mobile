@@ -266,6 +266,12 @@ export interface Translations {
   partner: string;
   amount: string;
   collaborationType: string;
+
+  // Campaign Summary Template
+  campaignUpdateGreeting: string; // "Hey {{partnerName}}!"
+  campaignUpdateIntro: string; // "I'm giving you an update about our campaign - {{campaignName}}. Please find links to my posts below:"
+  campaignUpdateClosing: string; // "Best"
+  campaignUpdateSignature: string; // "{{userName}}"
 }
 
 const englishTranslations: Translations = {
@@ -531,6 +537,12 @@ const englishTranslations: Translations = {
   partner: 'Partner',
   amount: 'Amount',
   collaborationType: 'Collaboration Type',
+
+  // Campaign Summary Template
+  campaignUpdateGreeting: 'Hey {{partnerName}}!',
+  campaignUpdateIntro: 'I\'m giving you an update about our campaign - {{campaignName}}. Please find links to my posts below:',
+  campaignUpdateClosing: 'Best',
+  campaignUpdateSignature: '{{userName}}',
 };
 
 const polishTranslations: Translations = {
@@ -796,6 +808,12 @@ const polishTranslations: Translations = {
   partner: 'Partner',
   amount: 'Amount',
   collaborationType: 'Collaboration Type',
+
+  // Campaign Summary Template
+  campaignUpdateGreeting: 'Cześć {{partnerName}}!',
+  campaignUpdateIntro: 'Przesyłam aktualizację dotyczącą naszej kampanii - {{campaignName}}. Poniżej znajdziesz linki do moich postów:',
+  campaignUpdateClosing: 'Pozdrawiam',
+  campaignUpdateSignature: '{{userName}}',
 };
 
 const translations = {
