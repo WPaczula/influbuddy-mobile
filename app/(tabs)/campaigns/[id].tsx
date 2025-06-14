@@ -9,6 +9,7 @@ import { Campaign } from '@/types';
 import { ArrowLeft, Calendar, DollarSign, ExternalLink, Building2, CircleCheck as CheckCircle, Clock, CirclePlay as PlayCircle, CreditCard as Edit, Trash2, Plus, Eye, Heart, MessageCircle, Share as ShareIcon, X, Link as LinkIcon, FileText, Send, Instagram, Youtube, Twitter, Globe } from 'lucide-react-native';
 import { campaignsService } from '@/services/campaigns';
 import StatusBadge from '@/components/StatusBadge';
+import CampaignDetailsSkeleton from '@/components/CampaignDetailsSkeleton';
 
 interface AddPostForm {
   url: string;
@@ -295,13 +296,7 @@ const CampaignDetailsScreen: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>{t.loading}</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <CampaignDetailsSkeleton />;
   }
 
   if (!campaign) {
@@ -330,6 +325,7 @@ const CampaignDetailsScreen: React.FC = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Campaign Header - Clean layout */}
         <View style={styles.section}>
           <View style={styles.campaignHeader}>
             <View style={styles.titleSection}>
@@ -339,11 +335,13 @@ const CampaignDetailsScreen: React.FC = () => {
                 <Text style={[styles.partnerName, { color: theme.colors.textSecondary }]}>{campaign.partner.name}</Text>
               </View>
             </View>
-            <StatusBadge status={campaign.status} showLabel />
+            <StatusBadge status={campaign.status} />
           </View>
 
           {campaign.description && (
-            <Text style={[styles.description, { color: theme.colors.textSecondary }]}>{campaign.description}</Text>
+            <View style={[styles.descriptionCard, { backgroundColor: theme.colors.surface }]}>
+              <Text style={[styles.description, { color: theme.colors.textSecondary }]}>{campaign.description}</Text>
+            </View>
           )}
 
           {isUrgent && (
@@ -356,9 +354,19 @@ const CampaignDetailsScreen: React.FC = () => {
           )}
         </View>
 
+        {/* Campaign Value & Timeline */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.timeline}</Text>
           <View style={[styles.timelineCard, { backgroundColor: theme.colors.surface }]}>
+            {campaign.productValue && (
+              <>
+                <View style={styles.timelineItem}>
+                  <Text style={[styles.timelineLabel, { color: theme.colors.textSecondary }]}>{t.campaignValue}</Text>
+                  <Text style={[styles.timelineValue, { color: theme.colors.text }]}>{formatCurrency(campaign.productValue)}</Text>
+                </View>
+                <View style={[styles.timelineDivider, { backgroundColor: theme.colors.border }]} />
+              </>
+            )}
             <View style={styles.timelineItem}>
               <Text style={[styles.timelineLabel, { color: theme.colors.textSecondary }]}>{t.startDate}</Text>
               <Text style={[styles.timelineValue, { color: theme.colors.text }]}>{formatDate(campaign.createdAt)}</Text>
@@ -373,6 +381,7 @@ const CampaignDetailsScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Social Media Posts */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.socialMediaPosts}</Text>
@@ -439,6 +448,7 @@ const CampaignDetailsScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Action Button */}
         {getStatusActions()}
       </ScrollView>
 
@@ -655,6 +665,9 @@ function createStyles(theme: any) {
     scrollContent: {
       padding: 20,
     },
+    section: {
+      marginBottom: 24,
+    },
     campaignHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -669,6 +682,7 @@ function createStyles(theme: any) {
       fontSize: 24,
       fontFamily: 'Inter-Bold',
       marginBottom: 8,
+      lineHeight: 30,
     },
     partnerInfo: {
       flexDirection: 'row',
@@ -679,18 +693,21 @@ function createStyles(theme: any) {
       fontSize: 16,
       fontFamily: 'Inter-Medium',
     },
+    descriptionCard: {
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 16,
+    },
     description: {
       fontSize: 16,
       fontFamily: 'Inter-Regular',
       lineHeight: 24,
-      marginBottom: 20,
     },
     urgentBanner: {
       flexDirection: 'row',
       alignItems: 'center',
       borderRadius: 12,
       padding: 16,
-      marginBottom: 20,
       borderLeftWidth: 4,
       gap: 12,
     },
@@ -698,40 +715,16 @@ function createStyles(theme: any) {
       fontSize: 16,
       fontFamily: 'Inter-SemiBold',
     },
-    statsGrid: {
-      flexDirection: 'row',
-      gap: 12,
-      marginBottom: 32,
-    },
-    statCard: {
-      flex: 1,
-      borderRadius: 16,
-      padding: 20,
-      alignItems: 'center',
-    },
-    statValue: {
+    sectionTitle: {
       fontSize: 20,
-      fontFamily: 'Inter-Bold',
-      marginTop: 8,
-      marginBottom: 4,
-    },
-    statLabel: {
-      fontSize: 14,
-      fontFamily: 'Inter-Medium',
-      textAlign: 'center',
-    },
-    section: {
-      marginBottom: 32,
+      fontFamily: 'Inter-SemiBold',
+      marginBottom: 16,
     },
     sectionHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 16,
-    },
-    sectionTitle: {
-      fontSize: 20,
-      fontFamily: 'Inter-SemiBold',
     },
     addButton: {
       flexDirection: 'row',
@@ -767,28 +760,6 @@ function createStyles(theme: any) {
     timelineValue: {
       fontSize: 16,
       fontFamily: 'Inter-SemiBold',
-    },
-    requirementsCard: {
-      borderRadius: 16,
-      padding: 20,
-    },
-    requirementItem: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      marginBottom: 12,
-      gap: 12,
-    },
-    requirementBullet: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      marginTop: 8,
-    },
-    requirementText: {
-      flex: 1,
-      fontSize: 16,
-      fontFamily: 'Inter-Regular',
-      lineHeight: 22,
     },
     socialCard: {
       borderRadius: 16,
@@ -839,7 +810,7 @@ function createStyles(theme: any) {
       maxWidth: 240,
     },
     summarySection: {
-      marginBottom: 32,
+      marginBottom: 24,
     },
     summaryCard: {
       borderRadius: 16,
@@ -895,10 +866,6 @@ function createStyles(theme: any) {
       fontFamily: 'Inter-SemiBold',
       color: 'white',
     },
-    actionsSection: {
-      marginTop: 20,
-      gap: 12,
-    },
     actionButton: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -907,6 +874,7 @@ function createStyles(theme: any) {
       paddingHorizontal: 24,
       borderRadius: 12,
       gap: 12,
+      marginTop: 8,
     },
     actionButtonText: {
       fontSize: 16,
@@ -1075,29 +1043,6 @@ function createStyles(theme: any) {
       fontSize: 16,
       fontFamily: 'Inter-SemiBold',
       color: 'white',
-    },
-    statusButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 12,
-      borderRadius: 8,
-      marginTop: 16,
-    },
-    statusButtonText: {
-      color: 'white',
-      fontSize: 16,
-      fontFamily: 'Inter_600SemiBold',
-      marginLeft: 8,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loadingText: {
-      fontSize: 16,
-      fontFamily: 'Inter_400Regular',
     },
   });
 }
