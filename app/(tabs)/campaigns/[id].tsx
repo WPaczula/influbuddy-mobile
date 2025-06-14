@@ -527,6 +527,7 @@ const CampaignDetailsScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
 
         {/* Action Button */}
         {getStatusActions()}
