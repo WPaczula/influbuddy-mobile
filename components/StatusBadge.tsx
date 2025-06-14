@@ -17,25 +17,25 @@ export default function StatusBadge({ status, size = 'medium', showLabel = false
       case 'DRAFT':
         return {
           backgroundColor: theme.colors.textSecondary,
-          text: 'DRAFT',
+          text: t.draft.toUpperCase(),
           label: t.draft,
         };
       case 'ACTIVE':
         return {
           backgroundColor: theme.colors.primary,
-          text: 'ACTIVE',
+          text: t.active.toUpperCase(),
           label: t.active,
         };
       case 'COMPLETED':
         return {
           backgroundColor: theme.colors.success,
-          text: 'DONE',
+          text: t.completed.toUpperCase(),
           label: t.completed,
         };
       case 'CANCELLED':
         return {
           backgroundColor: theme.colors.error,
-          text: 'CANCELLED',
+          text: t.cancelled.toUpperCase(),
           label: t.cancelled,
         };
     }
@@ -89,7 +89,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Bold',
     color: 'white',
     letterSpacing: 0.5,
-    textTransform: 'uppercase',
   },
   badgeTextSmall: {
     fontSize: 10,
