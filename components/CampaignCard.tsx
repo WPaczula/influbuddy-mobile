@@ -4,7 +4,7 @@ import { Campaign } from '@/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import StatusBadge from './StatusBadge';
-import { Calendar, DollarSign, Clock } from 'lucide-react-native';
+import { Building2, DollarSign, Calendar } from 'lucide-react-native';
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -39,88 +39,116 @@ export default function CampaignCard({ campaign, onPress }: CampaignCardProps) {
     return diffDays;
   };
 
+  const formatDeadlineDate = () => {
+    if (!campaign.deadline) return null;
+    const deadline = new Date(campaign.deadline);
+    return deadline.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   const daysLeft = getDaysLeft();
+  const deadlineDate = formatDeadlineDate();
 
   return (
     <TouchableOpacity
-      style={[styles.container, { backgroundColor: theme.colors.surface }]}
+      style={[styles.container, { 
+        backgroundColor: theme.colors.surface,
+        borderColor: theme.colors.borderLight,
+        shadowColor: theme.colors.shadow,
+      }]}
       onPress={onPress}
+      activeOpacity={0.7}
     >
+      {/* Subtle gradient overlay */}
       <LinearGradient
-        colors={[getStatusColor(campaign.status), getStatusColor(campaign.status) + '20']}
+        colors={[theme.colors.primary + '02', 'transparent']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.statusBar}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientOverlay}
       />
+
       <View style={styles.content}>
+        {/* Header with title and status badge */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
+          <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={2}>
             {campaign.title}
           </Text>
-          <StatusBadge status={campaign.status} showLabel />
+          <View style={styles.statusBadge}>
+            <StatusBadge status={campaign.status} size="small" />
+          </View>
         </View>
 
+        {/* Description */}
         {campaign.description && (
           <Text style={[styles.description, { color: theme.colors.textSecondary }]} numberOfLines={2}>
             {campaign.description}
           </Text>
         )}
 
+        {/* Campaign details */}
         <View style={styles.details}>
           {campaign.partner && (
-            <View style={styles.detail}>
-              <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>
-                {t.partner}
-              </Text>
-              <Text style={[styles.detailValue, { color: theme.colors.text }]}>
+            <View style={styles.detailItem}>
+              <View style={[styles.detailIcon, { backgroundColor: theme.colors.primaryLight }]}>
+                <Building2 size={14} color={theme.colors.primary} />
+              </View>
+              <Text style={[styles.detailText, { color: theme.colors.textSecondary }]} numberOfLines={1}>
                 {campaign.partner.name}
               </Text>
             </View>
           )}
 
           {campaign.productValue && (
-            <View style={styles.detail}>
-              <DollarSign size={16} color={theme.colors.textSecondary} />
-              <Text style={[styles.detailValue, { color: theme.colors.text }]}>
+            <View style={styles.detailItem}>
+              <View style={[styles.detailIcon, { backgroundColor: theme.colors.greenLight }]}>
+                <DollarSign size={14} color={theme.colors.green} />
+              </View>
+              <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>
                 ${campaign.productValue.toLocaleString()}
-              </Text>
-            </View>
-          )}
-
-          {campaign.deadline && (
-            <View style={styles.detail}>
-              <Calendar size={16} color={theme.colors.textSecondary} />
-              <Text style={[styles.detailValue, { color: theme.colors.text }]}>
-                {new Date(campaign.deadline).toLocaleDateString()}
               </Text>
             </View>
           )}
         </View>
 
-        {daysLeft !== null && (
-          <View style={styles.footer}>
-            <Clock size={16} color={theme.colors.textSecondary} />
-            <Text
-              style={[
-                styles.daysLeft,
-                {
-                  color:
-                    daysLeft < 0
-                      ? theme.colors.error
-                      : daysLeft === 0
-                        ? theme.colors.warning
-                        : theme.colors.textSecondary,
-                },
-              ]}
-            >
-              {daysLeft < 0
-                ? t.daysOverdue.replace('{days}', Math.abs(daysLeft).toString())
-                : daysLeft === 0
-                  ? t.dueToday
-                  : t.daysLeft.replace('{days}', daysLeft.toString())}
-            </Text>
+        {/* Footer with days left and deadline date */}
+        <View style={styles.footer}>
+          <View style={styles.daysLeftContainer}>
+            {daysLeft !== null && (
+              <Text
+                style={[
+                  styles.daysLeft,
+                  {
+                    color:
+                      daysLeft < 0
+                        ? theme.colors.error
+                        : daysLeft === 0
+                          ? theme.colors.warning
+                          : daysLeft <= 3
+                            ? theme.colors.warning
+                            : theme.colors.textSecondary,
+                  },
+                ]}
+              >
+                {daysLeft < 0
+                  ? `${Math.abs(daysLeft)} days overdue`
+                  : daysLeft === 0
+                    ? 'Due today'
+                    : `${daysLeft} days left`}
+              </Text>
+            )}
           </View>
-        )}
+
+          {deadlineDate && (
+            <View style={styles.deadlineContainer}>
+              <Calendar size={14} color={theme.colors.textTertiary} />
+              <Text style={[styles.deadlineDate, { color: theme.colors.textTertiary }]}>
+                {deadlineDate}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -128,29 +156,44 @@ export default function CampaignCard({ campaign, onPress }: CampaignCardProps) {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    borderRadius: 16,
+    borderRadius: 20,
     marginBottom: 16,
+    borderWidth: 1,
     overflow: 'hidden',
+    position: 'relative',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  statusBar: {
-    width: 4,
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   content: {
-    flex: 1,
-    padding: 16,
+    padding: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    alignItems: 'flex-start',
+    marginBottom: 12,
+    gap: 12,
   },
   title: {
     flex: 1,
     fontSize: 18,
     fontFamily: 'Inter-SemiBold',
-    marginRight: 12,
+    lineHeight: 24,
+  },
+  statusBadge: {
+    flexShrink: 0,
   },
   description: {
     fontSize: 14,
@@ -164,26 +207,44 @@ const styles = StyleSheet.create({
     gap: 16,
     marginBottom: 16,
   },
-  detail: {
+  detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flex: 1,
+    minWidth: 120,
   },
-  detailLabel: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
+  detailIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  detailValue: {
+  detailText: {
     fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Inter-Medium',
+    flex: 1,
   },
   footer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+  },
+  daysLeftContainer: {
+    flex: 1,
   },
   daysLeft: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
+  },
+  deadlineContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  deadlineDate: {
+    fontSize: 13,
+    fontFamily: 'Inter-Medium',
   },
 });
