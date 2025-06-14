@@ -29,12 +29,27 @@ export default function PartnerCard({ partner, onPress }: PartnerCardProps) {
       onPress={onPress} 
       activeOpacity={0.7}
     >
-      {/* Subtle gradient overlay */}
+      {/* Enhanced gradient overlay */}
       <LinearGradient
-        colors={[theme.colors.primary + '04', 'transparent']}
+        colors={theme.isDark 
+          ? ['rgba(183, 148, 246, 0.08)', 'rgba(104, 211, 145, 0.03)', 'transparent']
+          : ['rgba(183, 148, 246, 0.04)', 'rgba(104, 211, 145, 0.02)', 'transparent']
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientOverlay}
+      />
+
+      {/* Subtle accent border gradient */}
+      <LinearGradient
+        colors={[
+          theme.colors.primary + '20',
+          theme.colors.success + '10',
+          'transparent'
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.borderGradient}
       />
 
       <View style={styles.content}>
@@ -105,6 +120,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
     position: 'relative',
+    // Enhanced shadow
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
   },
   gradientOverlay: {
     position: 'absolute',
@@ -113,8 +137,17 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
+  borderGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+  },
   content: {
     padding: 20,
+    position: 'relative',
+    zIndex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -128,6 +161,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
+    // Add subtle shadow to avatar
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   avatarText: {
     fontSize: 18,

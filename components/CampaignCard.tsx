@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Campaign } from '@/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -63,6 +64,17 @@ export default function CampaignCard({ campaign, onPress }: CampaignCardProps) {
       onPress={onPress}
       activeOpacity={0.7}
     >
+      {/* Subtle background gradient */}
+      <LinearGradient
+        colors={theme.isDark 
+          ? ['rgba(183, 148, 246, 0.03)', 'transparent']
+          : ['rgba(183, 148, 246, 0.02)', 'transparent']
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.backgroundGradient}
+      />
+
       {/* Header with title and status badge */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
@@ -107,11 +119,20 @@ const styles = StyleSheet.create({
     padding: 16,
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   header: {
     flexDirection: 'row',
@@ -119,6 +140,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     gap: 12,
+    position: 'relative',
+    zIndex: 1,
   },
   title: {
     flex: 1,
@@ -132,6 +155,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     minHeight: 20, // Ensure consistent height
+    position: 'relative',
+    zIndex: 1,
   },
   companySection: {
     flexDirection: 'row',
