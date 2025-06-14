@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Check, ArrowRight, Circle, X } from 'lucide-react-native';
 
 interface StatusBadgeProps {
   status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
@@ -18,25 +17,25 @@ export default function StatusBadge({ status, size = 'medium', showLabel = false
       case 'DRAFT':
         return {
           backgroundColor: theme.colors.textSecondary,
-          icon: <Circle size={size === 'small' ? 14 : 16} color="white" strokeWidth={2.5} />,
+          text: 'DRAFT',
           label: t.draft,
         };
       case 'ACTIVE':
         return {
           backgroundColor: theme.colors.primary,
-          icon: <ArrowRight size={size === 'small' ? 14 : 16} color="white" strokeWidth={2.5} />,
+          text: 'ACTIVE',
           label: t.active,
         };
       case 'COMPLETED':
         return {
           backgroundColor: theme.colors.success,
-          icon: <Check size={size === 'small' ? 14 : 16} color="white" strokeWidth={2.5} />,
+          text: 'DONE',
           label: t.completed,
         };
       case 'CANCELLED':
         return {
           backgroundColor: theme.colors.error,
-          icon: <X size={size === 'small' ? 14 : 16} color="white" strokeWidth={2.5} />,
+          text: 'CANCELLED',
           label: t.cancelled,
         };
     }
@@ -51,9 +50,12 @@ export default function StatusBadge({ status, size = 'medium', showLabel = false
         size === 'small' && styles.badgeSmall,
         { backgroundColor: config.backgroundColor }
       ]}>
-        <View style={styles.iconContainer}>
-          {config.icon}
-        </View>
+        <Text style={[
+          styles.badgeText,
+          size === 'small' && styles.badgeTextSmall
+        ]}>
+          {config.text}
+        </Text>
       </View>
       {showLabel && (
         <Text style={[styles.label, { color: theme.colors.textSecondary }]}>{config.label}</Text>
@@ -69,24 +71,32 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   badge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    minWidth: 60,
     alignItems: 'center',
-    alignSelf: 'flex-start',
+    justifyContent: 'center',
   },
   badgeSmall: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    minWidth: 50,
   },
-  iconContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
+  badgeText: {
+    fontSize: 11,
+    fontFamily: 'Inter-Bold',
+    color: 'white',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  badgeTextSmall: {
+    fontSize: 10,
+    letterSpacing: 0.3,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: 'Inter-Medium',
   },
 });
