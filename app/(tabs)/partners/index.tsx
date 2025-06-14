@@ -7,6 +7,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import PartnerCard from '@/components/PartnerCard';
+import PartnerCardSkeleton from '@/components/PartnerCardSkeleton';
+import StatsBarSkeleton from '@/components/StatsBarSkeleton';
 import { Search, Plus, Users, UserPlus } from 'lucide-react-native';
 
 export default function PartnersScreen() {
@@ -23,7 +25,7 @@ export default function PartnersScreen() {
     .filter(partner => {
       const matchesSearch = partner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         partner.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        partner.email.toLowerCase().includes(searchQuery.toLowerCase());
+        partner.email?.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesSearch;
     })
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -36,115 +38,131 @@ export default function PartnersScreen() {
     router.push('/partners/add');
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>{t.loading}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Compact Search */}
+  const renderLoadingState = () => (
+    <>
+      {/* Search skeleton */}
       <View style={[styles.searchContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
         <View style={[styles.searchBox, { backgroundColor: theme.colors.borderLight }]}>
           <Search size={18} color={theme.colors.textSecondary} />
-          <TextInput
-            style={[styles.searchInput, { color: theme.colors.text }]}
-            placeholder={`${t.search} ${t.partners.toLowerCase()}...`}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor={theme.colors.textTertiary}
-          />
+          <View style={[styles.searchSkeleton, { backgroundColor: theme.colors.border }]} />
         </View>
       </View>
 
-      {/* Enhanced Stats Bar */}
-      <View style={[styles.statsBar, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
-        <LinearGradient
-          colors={theme.isDark ? ['#2D3748', '#4A5568'] : ['#FAF5FF', '#F0FFF4']} // Adjusted for theme
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.statsGradient}
-        >
-          <View style={styles.statsContent}>
-            <Text style={[styles.statsText, { color: theme.colors.text }]}>
-              {filteredPartners.length} z {partners.length} partnerów
-            </Text>
-            <Text style={[styles.statsText, { color: theme.colors.text }]}>
-              Łączne zarobki: {new Intl.NumberFormat('pl-PL', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 0,
-              }).format(partners.reduce((sum, p) => sum + p.totalEarnings, 0))}
-            </Text>
-          </View>
-        </LinearGradient>
-      </View>
+      {/* Stats bar skeleton */}
+      <StatsBarSkeleton />
 
+      {/* Partner cards skeleton */}
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {filteredPartners.length > 0 ? (
-          filteredPartners.map(partner => (
-            <PartnerCard
-              key={partner.id}
-              partner={partner}
-              onPress={() => handlePartnerPress(partner.id)}
-            />
-          ))
-        ) : (
-          <View style={[styles.emptyState, { backgroundColor: theme.colors.surface, borderColor: theme.colors.borderLight }]}>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <PartnerCardSkeleton key={index} />
+        ))}
+      </ScrollView>
+    </>
+  );
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {loading ? renderLoadingState() : (
+        <>
+          {/* Compact Search */}
+          <View style={[styles.searchContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+            <View style={[styles.searchBox, { backgroundColor: theme.colors.borderLight }]}>
+              <Search size={18} color={theme.colors.textSecondary} />
+              <TextInput
+                style={[styles.searchInput, { color: theme.colors.text }]}
+                placeholder={`${t.search} ${t.partners.toLowerCase()}...`}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor={theme.colors.textTertiary}
+              />
+            </View>
+          </View>
+
+          {/* Enhanced Stats Bar */}
+          <View style={[styles.statsBar, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
             <LinearGradient
               colors={theme.isDark ? ['#2D3748', '#4A5568'] : ['#FAF5FF', '#F0FFF4']} // Adjusted for theme
               start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.emptyIcon}
+              end={{ x: 1, y: 0 }}
+              style={styles.statsGradient}
             >
-              <Users size={32} color={theme.colors.primary} />
+              <View style={styles.statsContent}>
+                <Text style={[styles.statsText, { color: theme.colors.text }]}>
+                  {filteredPartners.length} z {partners.length} partnerów
+                </Text>
+                <Text style={[styles.statsText, { color: theme.colors.text }]}>
+                  Łączne zarobki: {new Intl.NumberFormat('pl-PL', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 0,
+                  }).format(partners.reduce((sum, p) => sum + p.totalEarnings, 0))}
+                </Text>
+              </View>
             </LinearGradient>
-            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
-              {searchQuery ? 'Nie znaleziono partnerów' : t.noPartnersYet}
-            </Text>
-            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-              {searchQuery 
-                ? 'Spróbuj dostosować wyszukiwanie'
-                : 'Dodaj swojego pierwszego partnera, aby rozpocząć śledzenie sponsoringu!'
-              }
-            </Text>
-            {!searchQuery && (
-              <TouchableOpacity onPress={handleAddPartner} activeOpacity={0.8}>
+          </View>
+
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            {filteredPartners.length > 0 ? (
+              filteredPartners.map(partner => (
+                <PartnerCard
+                  key={partner.id}
+                  partner={partner}
+                  onPress={() => handlePartnerPress(partner.id)}
+                />
+              ))
+            ) : (
+              <View style={[styles.emptyState, { backgroundColor: theme.colors.surface, borderColor: theme.colors.borderLight }]}>
                 <LinearGradient
-                  colors={['#D6BCFA', '#B794F6']} // Softer purple gradients
+                  colors={theme.isDark ? ['#2D3748', '#4A5568'] : ['#FAF5FF', '#F0FFF4']} // Adjusted for theme
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={styles.emptyButton}
+                  style={styles.emptyIcon}
                 >
-                  <UserPlus size={20} color="white" />
-                  <Text style={styles.emptyButtonText}>{t.addYourFirstPartner}</Text>
+                  <Users size={32} color={theme.colors.primary} />
                 </LinearGradient>
-              </TouchableOpacity>
+                <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
+                  {searchQuery ? 'Nie znaleziono partnerów' : t.noPartnersYet}
+                </Text>
+                <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                  {searchQuery 
+                    ? 'Spróbuj dostosować wyszukiwanie'
+                    : 'Dodaj swojego pierwszego partnera, aby rozpocząć śledzenie sponsoringu!'
+                  }
+                </Text>
+                {!searchQuery && (
+                  <TouchableOpacity onPress={handleAddPartner} activeOpacity={0.8}>
+                    <LinearGradient
+                      colors={['#D6BCFA', '#B794F6']} // Softer purple gradients
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.emptyButton}
+                    >
+                      <UserPlus size={20} color="white" />
+                      <Text style={styles.emptyButtonText}>{t.addYourFirstPartner}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                )}
+              </View>
             )}
-          </View>
-        )}
-      </ScrollView>
+          </ScrollView>
 
-      {/* Floating Action Button */}
-      <TouchableOpacity 
-        style={styles.fab} 
-        onPress={handleAddPartner}
-        activeOpacity={0.8}
-      >
-        <LinearGradient
-          colors={['#D6BCFA', '#B794F6']} // Softer purple gradients
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.fabGradient}
-        >
-          <UserPlus size={28} color="white" strokeWidth={2.5} />
-        </LinearGradient>
-      </TouchableOpacity>
+          {/* Floating Action Button */}
+          <TouchableOpacity 
+            style={styles.fab} 
+            onPress={handleAddPartner}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#D6BCFA', '#B794F6']} // Softer purple gradients
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.fabGradient}
+            >
+              <UserPlus size={28} color="white" strokeWidth={2.5} />
+            </LinearGradient>
+          </TouchableOpacity>
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -153,15 +171,6 @@ function createStyles(theme: any) {
   return StyleSheet.create({
     container: {
       flex: 1,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loadingText: {
-      fontSize: 16,
-      fontFamily: 'Inter-Medium',
     },
     searchContainer: {
       paddingHorizontal: 20,
@@ -180,6 +189,11 @@ function createStyles(theme: any) {
       flex: 1,
       fontSize: 15,
       fontFamily: 'Inter-Regular',
+    },
+    searchSkeleton: {
+      flex: 1,
+      height: 15,
+      borderRadius: 8,
     },
     statsBar: {
       borderBottomWidth: 1,
