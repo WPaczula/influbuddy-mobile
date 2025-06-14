@@ -29,27 +29,25 @@ export default function CampaignCard({ campaign, onPress }: CampaignCardProps) {
     });
 
     let urgencyColor = theme.colors.textSecondary;
-    let urgencyText = '';
+    let isUrgent = false;
     
     if (diffDays < 0) {
       urgencyColor = theme.colors.error;
-      urgencyText = `${Math.abs(diffDays)} days overdue`;
+      isUrgent = true;
     } else if (diffDays === 0) {
       urgencyColor = theme.colors.warning;
-      urgencyText = 'Due today';
+      isUrgent = true;
     } else if (diffDays <= 3) {
       urgencyColor = theme.colors.warning;
-      urgencyText = `${diffDays} days left`;
+      isUrgent = true;
     } else if (diffDays <= 7) {
       urgencyColor = theme.colors.primary;
-      urgencyText = `${diffDays} days left`;
     }
 
     return {
       formattedDate,
       urgencyColor,
-      urgencyText,
-      isUrgent: diffDays <= 3,
+      isUrgent,
     };
   };
 
@@ -73,29 +71,27 @@ export default function CampaignCard({ campaign, onPress }: CampaignCardProps) {
         <StatusBadge status={campaign.status} size="small" />
       </View>
 
-      {/* Partner info */}
-      <View style={styles.partnerSection}>
-        <Building2 size={16} color={theme.colors.textSecondary} />
-        <Text style={[styles.partnerText, { color: theme.colors.textSecondary }]} numberOfLines={1}>
-          {campaign.partner.company}
-        </Text>
-      </View>
-
-      {/* Footer with deadline */}
+      {/* Footer with company and deadline on same line */}
       <View style={styles.footer}>
+        <View style={styles.companySection}>
+          <Building2 size={14} color={theme.colors.textSecondary} />
+          <Text style={[styles.companyText, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+            {campaign.partner.company}
+          </Text>
+        </View>
+        
         {deadlineInfo && (
-          <View style={styles.deadlineContainer}>
-            <View style={[styles.deadlineContent, deadlineInfo.isUrgent && styles.urgentDeadline]}>
-              <Calendar size={14} color={deadlineInfo.urgencyColor} />
-              <Text style={[styles.deadlineDate, { color: deadlineInfo.urgencyColor }]}>
-                {deadlineInfo.formattedDate}
-              </Text>
-            </View>
-            {deadlineInfo.urgencyText && (
-              <Text style={[styles.urgencyText, { color: deadlineInfo.urgencyColor }]}>
-                {deadlineInfo.urgencyText}
-              </Text>
-            )}
+          <View style={[
+            styles.deadlineSection,
+            deadlineInfo.isUrgent && { 
+              backgroundColor: deadlineInfo.urgencyColor + '15', // 15% opacity
+              borderColor: deadlineInfo.urgencyColor + '30', // 30% opacity
+            }
+          ]}>
+            <Calendar size={14} color={deadlineInfo.urgencyColor} />
+            <Text style={[styles.deadlineText, { color: deadlineInfo.urgencyColor }]}>
+              {deadlineInfo.formattedDate}
+            </Text>
           </View>
         )}
       </View>
@@ -130,45 +126,37 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     lineHeight: 20,
   },
-  partnerSection: {
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
+  companySection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  partnerText: {
+    gap: 6,
     flex: 1,
+  },
+  companyText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
     lineHeight: 18,
+    flex: 1,
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
-  },
-  deadlineContainer: {
-    alignItems: 'flex-end',
-    gap: 2,
-  },
-  deadlineContent: {
+  deadlineSection: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
-  urgentDeadline: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: 'rgba(252, 129, 129, 0.1)', // Light red background for urgent items
-  },
-  deadlineDate: {
+  deadlineText: {
     fontSize: 13,
     fontFamily: 'Inter-SemiBold',
-  },
-  urgencyText: {
-    fontSize: 11,
-    fontFamily: 'Inter-Medium',
-    textAlign: 'right',
+    lineHeight: 16,
   },
 });
