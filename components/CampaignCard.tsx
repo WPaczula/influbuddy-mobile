@@ -64,15 +64,26 @@ export default function CampaignCard({ campaign, onPress }: CampaignCardProps) {
       onPress={onPress}
       activeOpacity={0.7}
     >
-      {/* Subtle background gradient */}
+      {/* Enhanced subtle background gradient */}
       <LinearGradient
         colors={theme.isDark 
-          ? ['rgba(183, 148, 246, 0.03)', 'transparent']
-          : ['rgba(183, 148, 246, 0.02)', 'transparent']
+          ? ['rgba(183, 148, 246, 0.05)', 'rgba(104, 211, 145, 0.02)', 'transparent']
+          : ['rgba(183, 148, 246, 0.03)', 'rgba(104, 211, 145, 0.01)', 'transparent']
         }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.backgroundGradient}
+      />
+
+      {/* Subtle accent border gradient */}
+      <LinearGradient
+        colors={[
+          theme.colors.primary + '15',
+          'transparent'
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.borderGradient}
       />
 
       {/* Header with title and status badge */}
@@ -117,13 +128,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     padding: 16,
+    // Enhanced shadow for beautiful depth
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -133,6 +145,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  borderGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
   },
   header: {
     flexDirection: 'row',
