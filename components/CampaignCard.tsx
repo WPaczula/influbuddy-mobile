@@ -67,8 +67,8 @@ export default function CampaignCard({ campaign, onPress }: CampaignCardProps) {
       {/* Enhanced subtle background gradient */}
       <LinearGradient
         colors={theme.isDark 
-          ? ['rgba(183, 148, 246, 0.05)', 'rgba(104, 211, 145, 0.02)', 'transparent']
-          : ['rgba(183, 148, 246, 0.03)', 'rgba(104, 211, 145, 0.01)', 'transparent']
+          ? ['rgba(183, 148, 246, 0.08)', 'rgba(104, 211, 145, 0.03)', 'transparent']
+          : ['rgba(183, 148, 246, 0.04)', 'rgba(104, 211, 145, 0.02)', 'transparent']
         }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -78,12 +78,24 @@ export default function CampaignCard({ campaign, onPress }: CampaignCardProps) {
       {/* Subtle accent border gradient */}
       <LinearGradient
         colors={[
-          theme.colors.primary + '15',
+          theme.colors.primary + '20',
           'transparent'
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.borderGradient}
+      />
+
+      {/* Subtle shine effect */}
+      <LinearGradient
+        colors={[
+          'transparent',
+          theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.4)',
+          'transparent'
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.shineEffect}
       />
 
       {/* Header with title and status badge */}
@@ -128,14 +140,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     padding: 16,
-    // Enhanced shadow for beautiful depth
+    // Enhanced shadow for beautiful depth - matching other cards
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 6, // Increased from 4
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOpacity: 0.12, // Increased from 0.08
+    shadowRadius: 16, // Increased from 12
+    elevation: 8, // Increased from 6
     overflow: 'hidden',
     position: 'relative',
   },
@@ -152,6 +164,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 2,
+  },
+  shineEffect: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '30%',
   },
   header: {
     flexDirection: 'row',
