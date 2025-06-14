@@ -32,7 +32,7 @@ export interface Campaign {
   collaborationType: 'BARTER' | 'PAID' | 'SPONSORED' | 'GIFTED' | 'EVENT';
   createdAt: string;
   updatedAt: string;
-  partner?: {
+  partner: {
     id: string;
     name: string;
     company: string;
