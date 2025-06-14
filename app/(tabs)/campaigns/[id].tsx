@@ -56,11 +56,10 @@ const CampaignDetailsScreen: React.FC = () => {
 
   const formatDate = (date: Date | string) => {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return dateObj.toLocaleDateString('pl-PL', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
+    return dateObj.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
+      year: 'numeric',
     });
   };
 
@@ -354,29 +353,69 @@ const CampaignDetailsScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Campaign Value & Timeline */}
+        {/* Vertical Timeline */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.timeline}</Text>
-          <View style={[styles.timelineCard, { backgroundColor: theme.colors.surface }]}>
+          <View style={[styles.timelineContainer, { backgroundColor: theme.colors.surface }]}>
+            
+            {/* Campaign Value */}
             {campaign.productValue && (
-              <>
-                <View style={styles.timelineItem}>
-                  <Text style={[styles.timelineLabel, { color: theme.colors.textSecondary }]}>{t.campaignValue}</Text>
-                  <Text style={[styles.timelineValue, { color: theme.colors.text }]}>{formatCurrency(campaign.productValue)}</Text>
+              <View style={styles.timelineStep}>
+                <View style={styles.timelineStepLeft}>
+                  <View style={[styles.timelineIcon, { backgroundColor: theme.colors.success }]}>
+                    <DollarSign size={16} color="white" />
+                  </View>
+                  <View style={[styles.timelineLine, { backgroundColor: theme.colors.border }]} />
                 </View>
-                <View style={[styles.timelineDivider, { backgroundColor: theme.colors.border }]} />
-              </>
+                <View style={styles.timelineStepRight}>
+                  <Text style={[styles.timelineStepTitle, { color: theme.colors.text }]}>{t.campaignValue}</Text>
+                  <Text style={[styles.timelineStepValue, { color: theme.colors.success }]}>
+                    {formatCurrency(campaign.productValue)}
+                  </Text>
+                </View>
+              </View>
             )}
-            <View style={styles.timelineItem}>
-              <Text style={[styles.timelineLabel, { color: theme.colors.textSecondary }]}>{t.startDate}</Text>
-              <Text style={[styles.timelineValue, { color: theme.colors.text }]}>{formatDate(campaign.createdAt)}</Text>
+
+            {/* Start Date */}
+            <View style={styles.timelineStep}>
+              <View style={styles.timelineStepLeft}>
+                <View style={[styles.timelineIcon, { backgroundColor: theme.colors.primary }]}>
+                  <PlayCircle size={16} color="white" />
+                </View>
+                <View style={[styles.timelineLine, { backgroundColor: theme.colors.border }]} />
+              </View>
+              <View style={styles.timelineStepRight}>
+                <Text style={[styles.timelineStepTitle, { color: theme.colors.text }]}>{t.startDate}</Text>
+                <Text style={[styles.timelineStepValue, { color: theme.colors.textSecondary }]}>
+                  {formatDate(campaign.createdAt)}
+                </Text>
+              </View>
             </View>
-            <View style={[styles.timelineDivider, { backgroundColor: theme.colors.border }]} />
-            <View style={styles.timelineItem}>
-              <Text style={[styles.timelineLabel, { color: theme.colors.textSecondary }]}>{t.deadline}</Text>
-              <Text style={[styles.timelineValue, { color: theme.colors.text }, isUrgent && { color: theme.colors.error }]}>
-                {campaign.deadline ? formatDate(campaign.deadline) : t.noDeadlines}
-              </Text>
+
+            {/* Deadline */}
+            <View style={[styles.timelineStep, styles.timelineStepLast]}>
+              <View style={styles.timelineStepLeft}>
+                <View style={[
+                  styles.timelineIcon, 
+                  { backgroundColor: isUrgent ? theme.colors.error : theme.colors.warning }
+                ]}>
+                  <Calendar size={16} color="white" />
+                </View>
+              </View>
+              <View style={styles.timelineStepRight}>
+                <Text style={[styles.timelineStepTitle, { color: theme.colors.text }]}>{t.deadline}</Text>
+                <Text style={[
+                  styles.timelineStepValue, 
+                  { color: isUrgent ? theme.colors.error : theme.colors.textSecondary }
+                ]}>
+                  {campaign.deadline ? formatDate(campaign.deadline) : t.noDeadlines}
+                </Text>
+                {isUrgent && (
+                  <Text style={[styles.timelineStepSubtext, { color: theme.colors.error }]}>
+                    {daysUntil === 0 ? 'Due today!' : `${daysUntil} days left`}
+                  </Text>
+                )}
+              </View>
             </View>
           </View>
         </View>
@@ -743,28 +782,76 @@ function createStyles(theme: any) {
       fontSize: 14,
       fontFamily: 'Inter-SemiBold',
     },
-    timelineCard: {
+    
+    // Vertical Timeline Styles
+    timelineContainer: {
       borderRadius: 16,
       padding: 20,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 3,
     },
-    timelineItem: {
+    timelineStep: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      minHeight: 60,
+    },
+    timelineStepLast: {
+      minHeight: 'auto',
+    },
+    timelineStepLeft: {
       alignItems: 'center',
-      paddingVertical: 8,
+      marginRight: 16,
+      width: 32,
     },
-    timelineDivider: {
-      height: 1,
-      marginVertical: 8,
+    timelineIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 8,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
     },
-    timelineLabel: {
-      fontSize: 16,
-      fontFamily: 'Inter-Medium',
+    timelineLine: {
+      width: 2,
+      flex: 1,
+      minHeight: 20,
     },
-    timelineValue: {
-      fontSize: 16,
+    timelineStepRight: {
+      flex: 1,
+      paddingTop: 4,
+    },
+    timelineStepTitle: {
+      fontSize: 14,
       fontFamily: 'Inter-SemiBold',
+      marginBottom: 4,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
     },
+    timelineStepValue: {
+      fontSize: 16,
+      fontFamily: 'Inter-Bold',
+      lineHeight: 20,
+    },
+    timelineStepSubtext: {
+      fontSize: 12,
+      fontFamily: 'Inter-Medium',
+      marginTop: 2,
+    },
+
     socialCard: {
       borderRadius: 16,
       padding: 16,
