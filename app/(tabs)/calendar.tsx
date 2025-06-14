@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import CampaignCard from '@/components/CampaignCard';
+import CalendarSkeleton from '@/components/CalendarSkeleton';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowLeft, Clock } from 'lucide-react-native';
 
 export default function CalendarScreen() {
@@ -137,9 +138,7 @@ export default function CalendarScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>{t.loading}</Text>
-        </View>
+        <CalendarSkeleton />
       </SafeAreaView>
     );
   }
@@ -275,7 +274,6 @@ export default function CalendarScreen() {
                 <CampaignCard
                   key={campaign.id}
                   campaign={campaign}
-                  partner={partner}
                   onPress={() => router.push(`/campaigns/${campaign.id}`)}
                 />
               ) : null;
@@ -335,7 +333,6 @@ export default function CalendarScreen() {
                       <CampaignCard
                         key={campaign.id}
                         campaign={campaign}
-                        partner={partner}
                         onPress={() => handleCampaignPress(campaign.id)}
                       />
                     ) : null;
@@ -362,15 +359,6 @@ function createStyles(theme: any) {
   return StyleSheet.create({
     container: {
       flex: 1,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loadingText: {
-      fontSize: 16,
-      fontFamily: 'Inter-Medium',
     },
     monthNavigation: {
       flexDirection: 'row',
