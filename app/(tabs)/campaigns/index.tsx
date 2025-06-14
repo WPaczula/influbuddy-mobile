@@ -6,6 +6,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import CampaignCard from '@/components/CampaignCard';
+import CampaignCardSkeleton from '@/components/CampaignCardSkeleton';
+import FilterChipSkeleton from '@/components/FilterChipSkeleton';
 import { Search, Plus, Filter } from 'lucide-react-native';
 import { campaignsService } from '@/services/campaigns';
 import { Campaign } from '@/types';
@@ -80,141 +82,167 @@ export default function CampaignsScreen() {
     router.push('/campaigns/add');
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>{t.loading}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Compact Search */}
+  const renderLoadingState = () => (
+    <>
+      {/* Search skeleton */}
       <View style={[styles.searchContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
         <View style={[styles.searchBox, { backgroundColor: theme.colors.borderLight }]}>
           <Search size={18} color={theme.colors.textSecondary} />
-          <TextInput
-            style={[styles.searchInput, { color: theme.colors.text }]}
-            placeholder={`${t.search} ${t.campaigns.toLowerCase()}...`}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor={theme.colors.textTertiary}
-          />
+          <View style={[styles.searchSkeleton, { backgroundColor: theme.colors.border }]} />
         </View>
       </View>
 
-      {/* Compact Filter Chips */}
+      {/* Filter chips skeleton */}
       <View style={styles.filterContainer}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterScrollContent}
         >
-          {(['all', 'DRAFT', 'ACTIVE', 'COMPLETED', 'CANCELLED'] as const).map(status => (
-            <TouchableOpacity
-              key={status}
-              style={[
-                styles.filterChip,
-                { backgroundColor: theme.colors.borderLight },
-                statusFilter === status && styles.filterChipActive
-              ]}
-              onPress={() => setStatusFilter(status)}
-              activeOpacity={0.7}
-            >
-              {statusFilter === status && (
-                <LinearGradient
-                  colors={['#D6BCFA', '#B794F6']} // Softer purple gradients
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.filterChipGradient}
-                />
-              )}
-              <View style={styles.filterChipContent}>
-                <Text style={[
-                  styles.filterChipText,
-                  { color: theme.colors.textSecondary },
-                  statusFilter === status && { color: 'white', fontFamily: 'Inter-Bold' }
-                ]} numberOfLines={1}>
-                  {getFilterLabel(status)}
-                </Text>
-                <View style={[
-                  styles.filterChipBadge,
-                  { backgroundColor: statusFilter === status ? 'rgba(255,255,255,0.3)' : theme.colors.border }
-                ]}>
-                  <Text style={[
-                    styles.filterChipBadgeText,
-                    { color: statusFilter === status ? 'white' : theme.colors.textSecondary }
-                  ]}>
-                    {statusCounts[status]}
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <FilterChipSkeleton key={index} />
           ))}
         </ScrollView>
       </View>
 
+      {/* Campaign cards skeleton */}
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {filteredCampaigns.length > 0 ? (
-          filteredCampaigns.map(campaign => (
-            <CampaignCard
-              key={campaign.id}
-              campaign={campaign}
-              onPress={() => handleCampaignPress(campaign.id)}
-            />
-          ))
-        ) : (
-          <View style={[styles.emptyState, { backgroundColor: theme.colors.surface, borderColor: theme.colors.borderLight }]}>
+        {Array.from({ length: 6 }).map((_, index) => (
+          <CampaignCardSkeleton key={index} />
+        ))}
+      </ScrollView>
+    </>
+  );
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {loading ? renderLoadingState() : (
+        <>
+          {/* Compact Search */}
+          <View style={[styles.searchContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+            <View style={[styles.searchBox, { backgroundColor: theme.colors.borderLight }]}>
+              <Search size={18} color={theme.colors.textSecondary} />
+              <TextInput
+                style={[styles.searchInput, { color: theme.colors.text }]}
+                placeholder={`${t.search} ${t.campaigns.toLowerCase()}...`}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor={theme.colors.textTertiary}
+              />
+            </View>
+          </View>
+
+          {/* Compact Filter Chips */}
+          <View style={styles.filterContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterScrollContent}
+            >
+              {(['all', 'DRAFT', 'ACTIVE', 'COMPLETED', 'CANCELLED'] as const).map(status => (
+                <TouchableOpacity
+                  key={status}
+                  style={[
+                    styles.filterChip,
+                    { backgroundColor: theme.colors.borderLight },
+                    statusFilter === status && styles.filterChipActive
+                  ]}
+                  onPress={() => setStatusFilter(status)}
+                  activeOpacity={0.7}
+                >
+                  {statusFilter === status && (
+                    <LinearGradient
+                      colors={['#D6BCFA', '#B794F6']} // Softer purple gradients
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.filterChipGradient}
+                    />
+                  )}
+                  <View style={styles.filterChipContent}>
+                    <Text style={[
+                      styles.filterChipText,
+                      { color: theme.colors.textSecondary },
+                      statusFilter === status && { color: 'white', fontFamily: 'Inter-Bold' }
+                    ]} numberOfLines={1}>
+                      {getFilterLabel(status)}
+                    </Text>
+                    <View style={[
+                      styles.filterChipBadge,
+                      { backgroundColor: statusFilter === status ? 'rgba(255,255,255,0.3)' : theme.colors.border }
+                    ]}>
+                      <Text style={[
+                        styles.filterChipBadgeText,
+                        { color: statusFilter === status ? 'white' : theme.colors.textSecondary }
+                      ]}>
+                        {statusCounts[status]}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            {filteredCampaigns.length > 0 ? (
+              filteredCampaigns.map(campaign => (
+                <CampaignCard
+                  key={campaign.id}
+                  campaign={campaign}
+                  onPress={() => handleCampaignPress(campaign.id)}
+                />
+              ))
+            ) : (
+              <View style={[styles.emptyState, { backgroundColor: theme.colors.surface, borderColor: theme.colors.borderLight }]}>
+                <LinearGradient
+                  colors={theme.isDark ? ['#2D3748', '#4A5568'] : ['#FAF5FF', '#EBF8FF']} // Adjusted for theme
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.emptyIcon}
+                >
+                  <Filter size={32} color={theme.colors.primary} />
+                </LinearGradient>
+                <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
+                  {searchQuery || statusFilter !== 'all' ? t.noCampaignsYet : t.noCampaignsYet}
+                </Text>
+                <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                  {searchQuery || statusFilter !== 'all'
+                    ? 'Spróbuj dostosować wyszukiwanie lub filtry'
+                    : t.createFirstCampaign
+                  }
+                </Text>
+                <TouchableOpacity onPress={handleAddCampaign} activeOpacity={0.8}>
+                  <LinearGradient
+                    colors={['#D6BCFA', '#B794F6']} // Softer purple gradients
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.emptyButton}
+                  >
+                    <Plus size={20} color="white" />
+                    <Text style={styles.emptyButtonText}>{t.createYourFirstCampaign}</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            )}
+          </ScrollView>
+
+          {/* Floating Action Button */}
+          <TouchableOpacity
+            style={styles.fab}
+            onPress={handleAddCampaign}
+            activeOpacity={0.8}
+          >
             <LinearGradient
-              colors={theme.isDark ? ['#2D3748', '#4A5568'] : ['#FAF5FF', '#EBF8FF']} // Adjusted for theme
+              colors={['#D6BCFA', '#B794F6']} // Softer purple gradients
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={styles.emptyIcon}
+              style={styles.fabGradient}
             >
-              <Filter size={32} color={theme.colors.primary} />
+              <Plus size={28} color="white" strokeWidth={2.5} />
             </LinearGradient>
-            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
-              {searchQuery || statusFilter !== 'all' ? t.noCampaignsYet : t.noCampaignsYet}
-            </Text>
-            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-              {searchQuery || statusFilter !== 'all'
-                ? 'Spróbuj dostosować wyszukiwanie lub filtry'
-                : t.createFirstCampaign
-              }
-            </Text>
-            <TouchableOpacity onPress={handleAddCampaign} activeOpacity={0.8}>
-              <LinearGradient
-                colors={['#D6BCFA', '#B794F6']} // Softer purple gradients
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.emptyButton}
-              >
-                <Plus size={20} color="white" />
-                <Text style={styles.emptyButtonText}>{t.createYourFirstCampaign}</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleAddCampaign}
-        activeOpacity={0.8}
-      >
-        <LinearGradient
-          colors={['#D6BCFA', '#B794F6']} // Softer purple gradients
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.fabGradient}
-        >
-          <Plus size={28} color="white" strokeWidth={2.5} />
-        </LinearGradient>
-      </TouchableOpacity>
+          </TouchableOpacity>
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -223,15 +251,6 @@ function createStyles(theme: any) {
   return StyleSheet.create({
     container: {
       flex: 1,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loadingText: {
-      fontSize: 16,
-      fontFamily: 'Inter-Regular',
     },
     searchContainer: {
       paddingHorizontal: 20,
@@ -251,6 +270,11 @@ function createStyles(theme: any) {
       fontSize: 16,
       fontFamily: 'Inter-Regular',
       padding: 0,
+    },
+    searchSkeleton: {
+      flex: 1,
+      height: 16,
+      borderRadius: 8,
     },
     filterContainer: {
       paddingVertical: 12,
