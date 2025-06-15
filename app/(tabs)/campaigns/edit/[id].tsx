@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useData } from '@/hooks/useData';
@@ -7,14 +7,15 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useState, useEffect } from 'react';
 import { Partner } from '@/types';
 import { ArrowLeft, Calendar, DollarSign, Plus, X, ChevronDown, Building2, Check, Save } from 'lucide-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface CampaignForm {
   title: string;
   description: string;
   partnerId: string;
   amount: string;
-  startDate: string;
-  deadline: string;
+  startDate: Date;
+  deadline: Date;
   requirements: string[];
 }
 
@@ -32,12 +33,14 @@ export default function EditCampaignScreen() {
     description: '',
     partnerId: '',
     amount: '',
-    startDate: '',
-    deadline: '',
+    startDate: new Date(),
+    deadline: new Date(),
     requirements: [''],
   });
   
   const [showPartnerPicker, setShowPartnerPicker] = useState(false);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showDeadlinePicker, setShowDeadlinePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -51,8 +54,8 @@ export default function EditCampaignScreen() {
         description: campaign.description || '',
         partnerId: campaign.partnerId || '',
         amount: campaign.amount?.toString() || '',
-        startDate: campaign.startDate ? new Date(campaign.startDate).toISOString().split('T')[0] : '',
-        deadline: campaign.deadline ? new Date(campaign.deadline).toISOString().split('T')[0] : '',
+        startDate: campaign.startDate ? new Date(campaign.startDate) : new Date(),
+        deadline: campaign.deadline ? new Date(campaign.deadline) : new Date(),
         requirements: campaign.requirements && campaign.requirements.length > 0 ? campaign.requirements : [''],
       });
       setIsLoaded(true);
@@ -85,9 +88,12 @@ export default function EditCampaignScreen() {
 
   const selectedPartner = partners.find(p => p.id === form.partnerId);
 
-  const formatDateForInput = (dateString: string) => {
-    if (!dateString) return '';
-    return dateString.split('T')[0];
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   const validateForm = () => {
@@ -107,11 +113,7 @@ export default function EditCampaignScreen() {
       Alert.alert(t.error, t.validAmount);
       return false;
     }
-    if (!form.deadline) {
-      Alert.alert(t.error, t.deadlineRequired);
-      return false;
-    }
-    if (new Date(form.deadline) <= new Date(form.startDate)) {
+    if (form.deadline <= form.startDate) {
       Alert.alert(t.error, t.deadlineAfterStart);
       return false;
     }
@@ -132,8 +134,8 @@ export default function EditCampaignScreen() {
         description: form.description.trim(),
         partnerId: form.partnerId,
         amount: Number(form.amount.replace(/,/g, '')),
-        startDate: new Date(form.startDate).toISOString(),
-        deadline: new Date(form.deadline).toISOString(),
+        startDate: form.startDate.toISOString(),
+        deadline: form.deadline.toISOString(),
         requirements: form.requirements.filter(req => req.trim()),
       });
       
@@ -181,6 +183,24 @@ export default function EditCampaignScreen() {
   const handleAmountChange = (text: string) => {
     const formatted = formatCurrency(text);
     setForm(prev => ({ ...prev, amount: formatted }));
+  };
+
+  const handleStartDateChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowStartDatePicker(false);
+    }
+    if (selectedDate) {
+      setForm(prev => ({ ...prev, startDate: selectedDate }));
+    }
+  };
+
+  const handleDeadlineChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDeadlinePicker(false);
+    }
+    if (selectedDate) {
+      setForm(prev => ({ ...prev, deadline: selectedDate }));
+    }
   };
 
   return (
@@ -271,35 +291,71 @@ export default function EditCampaignScreen() {
         <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.timeline}</Text>
           
-          <View style={styles.dateRow}>
-            <View style={styles.dateInput}>
-              <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.startDate}</Text>
-              <View style={[styles.dateField, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
-                <Calendar size={16} color={theme.colors.textSecondary} />
-                <TextInput
-                  style={[styles.dateText, { color: theme.colors.text }]}
-                  value={form.startDate}
-                  onChangeText={(text) => setForm(prev => ({ ...prev, startDate: text }))}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={theme.colors.textTertiary}
-                />
-              </View>
-            </View>
-            
-            <View style={styles.dateInput}>
-              <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.deadline} *</Text>
-              <View style={[styles.dateField, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
-                <Calendar size={16} color={theme.colors.textSecondary} />
-                <TextInput
-                  style={[styles.dateText, { color: theme.colors.text }]}
-                  value={form.deadline}
-                  onChangeText={(text) => setForm(prev => ({ ...prev, deadline: text }))}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={theme.colors.textTertiary}
-                />
-              </View>
-            </View>
+          {/* Start Date */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.startDate}</Text>
+            <TouchableOpacity
+              style={[styles.dateButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+              onPress={() => setShowStartDatePicker(true)}
+            >
+              <Calendar size={20} color={theme.colors.textSecondary} />
+              <Text style={[styles.dateText, { color: theme.colors.text }]}>
+                {formatDate(form.startDate)}
+              </Text>
+              <ChevronDown size={20} color={theme.colors.textSecondary} />
+            </TouchableOpacity>
           </View>
+
+          {/* Deadline */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.deadline} *</Text>
+            <TouchableOpacity
+              style={[styles.dateButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+              onPress={() => setShowDeadlinePicker(true)}
+            >
+              <Calendar size={20} color={theme.colors.textSecondary} />
+              <Text style={[styles.dateText, { color: theme.colors.text }]}>
+                {formatDate(form.deadline)}
+              </Text>
+              <ChevronDown size={20} color={theme.colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Date Pickers */}
+          {showStartDatePicker && (
+            <DateTimePicker
+              value={form.startDate}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={handleStartDateChange}
+              maximumDate={form.deadline}
+            />
+          )}
+
+          {showDeadlinePicker && (
+            <DateTimePicker
+              value={form.deadline}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={handleDeadlineChange}
+              minimumDate={form.startDate}
+            />
+          )}
+
+          {/* iOS Date Picker Done Button */}
+          {Platform.OS === 'ios' && (showStartDatePicker || showDeadlinePicker) && (
+            <View style={styles.datePickerActions}>
+              <TouchableOpacity
+                style={[styles.datePickerDone, { backgroundColor: theme.colors.primary }]}
+                onPress={() => {
+                  setShowStartDatePicker(false);
+                  setShowDeadlinePicker(false);
+                }}
+              >
+                <Text style={styles.datePickerDoneText}>{t.done}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
@@ -542,26 +598,33 @@ function createStyles(theme: any) {
       fontSize: 16,
       fontFamily: 'Inter-Regular',
     },
-    dateRow: {
-      flexDirection: 'row',
-      gap: 12,
-    },
-    dateInput: {
-      flex: 1,
-    },
-    dateField: {
+    dateButton: {
       flexDirection: 'row',
       alignItems: 'center',
       borderWidth: 1,
       borderRadius: 12,
       paddingHorizontal: 16,
       paddingVertical: 12,
-      gap: 8,
+      gap: 12,
     },
     dateText: {
       flex: 1,
       fontSize: 16,
       fontFamily: 'Inter-Regular',
+    },
+    datePickerActions: {
+      alignItems: 'center',
+      marginTop: 16,
+    },
+    datePickerDone: {
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 8,
+    },
+    datePickerDoneText: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      color: 'white',
     },
     requirementsHeader: {
       flexDirection: 'row',
