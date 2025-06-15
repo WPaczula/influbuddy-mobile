@@ -91,6 +91,7 @@ export default function AddCampaignScreen() {
         description: form.description.trim(),
         partnerId: form.partnerId,
         productValue: Number(form.amount.replace(/,/g, '')),
+        requirements: form.requirements.filter(req => req.trim()),
         deadline: form.deadline,
         status: 'DRAFT',
       });
