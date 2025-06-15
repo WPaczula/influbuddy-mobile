@@ -85,9 +85,9 @@ const CampaignDetailsScreen: React.FC = () => {
 
   const getDeadlineStatus = () => {
     if (!campaign?.deadline) return null;
-    
+
     const daysUntil = getDaysUntilDeadline();
-    
+
     // Only show urgency for non-completed and non-cancelled campaigns
     if (campaign.status === 'COMPLETED' || campaign.status === 'CANCELLED') {
       return null;
@@ -261,7 +261,10 @@ const CampaignDetailsScreen: React.FC = () => {
     try {
       const updatedCampaign = await campaignsService.addPost(
         campaign.id,
-        postForm.url
+        postForm.url,
+        postForm.platform,
+        postForm.postType,
+        postForm.description
       );
       setCampaign(updatedCampaign);
       setShowAddPost(false);
@@ -393,10 +396,10 @@ const CampaignDetailsScreen: React.FC = () => {
 
           {deadlineStatus && (
             <View style={[
-              styles.urgentBanner, 
-              { 
-                backgroundColor: deadlineStatus.backgroundColor, 
-                borderLeftColor: deadlineStatus.color 
+              styles.urgentBanner,
+              {
+                backgroundColor: deadlineStatus.backgroundColor,
+                borderLeftColor: deadlineStatus.color
               }
             ]}>
               <Clock size={20} color={deadlineStatus.color} />

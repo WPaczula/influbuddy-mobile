@@ -52,10 +52,13 @@ export const campaignsService = {
     }
   },
 
-  async addPost(campaignId: string, postUrl: string): Promise<Campaign> {
+  async addPost(campaignId: string, postUrl: string, platform: string, postType: string, description?: string): Promise<Campaign> {
     try {
       const response = await api.post<{ campaign: Campaign }>(`campaigns/${campaignId}/posts`, {
         postUrl,
+        platform,
+        postType,
+        description,
       });
       return response.data.campaign;
     } catch (error) {
