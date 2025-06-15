@@ -13,7 +13,6 @@ interface CampaignForm {
   partnerId: string;
   productValue: string;
   deadline: string;
-  collaborationType: 'BARTER' | 'PAID' | 'SPONSORED' | 'GIFTED' | 'EVENT';
 }
 
 export default function AddCampaignScreen() {
@@ -27,7 +26,6 @@ export default function AddCampaignScreen() {
     partnerId: '',
     productValue: '',
     deadline: '',
-    collaborationType: 'BARTER',
   });
   const [showPartnerPicker, setShowPartnerPicker] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -72,7 +70,6 @@ export default function AddCampaignScreen() {
         partnerId: form.partnerId,
         productValue: Number(form.productValue),
         deadline: new Date(form.deadline),
-        collaborationType: form.collaborationType,
         status: 'DRAFT',
       });
       router.back();
@@ -189,31 +186,6 @@ export default function AddCampaignScreen() {
             </View>
             <ChevronDown size={20} color={theme.colors.textSecondary} />
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: theme.colors.text }]}>{t.collaborationType}</Text>
-          <View style={[styles.typePicker, { borderColor: theme.colors.border }]}>
-            {(['BARTER', 'PAID', 'SPONSORED', 'GIFTED', 'EVENT'] as const).map((type) => (
-              <TouchableOpacity
-                key={type}
-                style={[
-                  styles.typeOption,
-                  form.collaborationType === type && { backgroundColor: theme.colors.primary },
-                ]}
-                onPress={() => setForm(prev => ({ ...prev, collaborationType: type }))}
-              >
-                <Text
-                  style={[
-                    styles.typeOptionText,
-                    { color: form.collaborationType === type ? 'white' : theme.colors.text },
-                  ]}
-                >
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
         </View>
       </ScrollView>
 
@@ -350,19 +322,6 @@ function createStyles(theme: any) {
     },
     datePickerText: {
       flex: 1,
-      fontSize: 16,
-      fontFamily: 'Inter-Regular',
-    },
-    typePicker: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderWidth: 1,
-      borderRadius: 12,
-    },
-    typeOption: {
-      padding: 12,
-    },
-    typeOptionText: {
       fontSize: 16,
       fontFamily: 'Inter-Regular',
     },

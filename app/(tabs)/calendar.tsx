@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import CampaignCard from '@/components/CampaignCard';
 import CalendarSkeleton from '@/components/CalendarSkeleton';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowLeft, Clock } from 'lucide-react-native';
+import React from 'react';
 
 export default function CalendarScreen() {
   const { theme } = useTheme();
@@ -38,14 +39,14 @@ export default function CalendarScreen() {
 
   const getMonthCampaigns = () => {
     return campaigns.filter(campaign => {
-      const deadline = new Date(campaign.deadline);
-      const isInMonth = deadline.getMonth() === selectedMonth.getMonth() && 
-                       deadline.getFullYear() === selectedMonth.getFullYear();
-      
+      const deadline = new Date(campaign.deadline || '');
+      const isInMonth = deadline.getMonth() === selectedMonth.getMonth() &&
+        deadline.getFullYear() === selectedMonth.getFullYear();
+
       const matchesPartner = selectedPartner === null || campaign.partnerId === selectedPartner;
-      
+
       return isInMonth && matchesPartner;
-    }).sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+    }).sort((a, b) => new Date(a.deadline || '').getTime() - new Date(b.deadline || '').getTime());
   };
 
   const monthCampaigns = getMonthCampaigns();
@@ -60,22 +61,22 @@ export default function CalendarScreen() {
 
     const weeks = [];
     let currentWeek = [];
-    
+
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfWeek; i++) {
       currentWeek.push(null);
     }
-    
+
     // Add all days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       currentWeek.push(day);
-      
+
       if (currentWeek.length === 7) {
         weeks.push(currentWeek);
         currentWeek = [];
       }
     }
-    
+
     // Add remaining empty cells
     while (currentWeek.length < 7) {
       currentWeek.push(null);
@@ -83,13 +84,13 @@ export default function CalendarScreen() {
     if (currentWeek.some(day => day !== null)) {
       weeks.push(currentWeek);
     }
-    
+
     return weeks;
   };
 
   const getDayCampaigns = (day: number) => {
     return monthCampaigns.filter(campaign => {
-      const deadline = new Date(campaign.deadline);
+      const deadline = new Date(campaign.deadline || '');
       return deadline.getDate() === day;
     });
   };
@@ -159,9 +160,9 @@ export default function CalendarScreen() {
 
       {partners.length > 0 && (
         <View style={[styles.partnerFilter, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.partnerScrollContent}
           >
             <TouchableOpacity
@@ -180,7 +181,7 @@ export default function CalendarScreen() {
                 {t.allPartners}
               </Text>
             </TouchableOpacity>
-            
+
             {partners.map(partner => (
               <TouchableOpacity
                 key={partner.id}
@@ -211,17 +212,17 @@ export default function CalendarScreen() {
               <Text key={day} style={[styles.dayHeader, { color: theme.colors.textSecondary }]}>{day}</Text>
             ))}
           </View>
-          
+
           {weeks.map((week, weekIndex) => (
             <View key={weekIndex} style={styles.week}>
               {week.map((day, dayIndex) => {
                 const dayCampaigns = day ? getDayCampaigns(day) : [];
-                const isToday = day && 
+                const isToday = day &&
                   new Date().getDate() === day &&
                   new Date().getMonth() === selectedMonth.getMonth() &&
                   new Date().getFullYear() === selectedMonth.getFullYear();
                 const hasDeadlines = dayCampaigns.length > 0;
-                
+
                 return (
                   <TouchableOpacity
                     key={dayIndex}
@@ -234,11 +235,11 @@ export default function CalendarScreen() {
                     activeOpacity={hasDeadlines ? 0.7 : 1}
                   >
                     {day && (
-                      <>
+                      <React.Fragment>
                         <Text style={[
                           styles.dayNumber,
                           { color: theme.colors.text },
-                          isToday && [styles.todayNumber, { color: theme.colors.primary, backgroundColor: theme.colors.primaryLight }],
+                          isToday ? [styles.todayNumber, { color: theme.colors.primary, backgroundColor: theme.colors.primaryLight }] : {},
                           hasDeadlines && { color: theme.colors.primary }
                         ]}>
                           {day}
@@ -253,7 +254,7 @@ export default function CalendarScreen() {
                             )}
                           </View>
                         )}
-                      </>
+                      </React.Fragment>
                     )}
                   </TouchableOpacity>
                 );
@@ -266,7 +267,7 @@ export default function CalendarScreen() {
           <Text style={[styles.campaignsTitle, { color: theme.colors.text }]}>
             Kampanie w {months[selectedMonth.getMonth()].toLowerCase()}
           </Text>
-          
+
           {monthCampaigns.length > 0 ? (
             monthCampaigns.map(campaign => {
               const partner = partners.find(p => p.id === campaign.partnerId);
@@ -283,7 +284,7 @@ export default function CalendarScreen() {
               <CalendarIcon size={48} color={theme.colors.border} />
               <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>{t.noCampaignsThisMonth}</Text>
               <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                {selectedPartner 
+                {selectedPartner
                   ? 'Brak kampanii od tego partnera w wybranym miesiącu'
                   : t.scheduleCampaigns
                 }
@@ -313,7 +314,7 @@ export default function CalendarScreen() {
             </View>
             <View style={styles.modalBackButton} />
           </View>
-          
+
           <ScrollView style={styles.modalContent}>
             {selectedDayCampaigns.length > 0 ? (
               <>
@@ -325,7 +326,7 @@ export default function CalendarScreen() {
                     </Text>
                   </View>
                 </View>
-                
+
                 <View style={styles.modalCampaignsList}>
                   {selectedDayCampaigns.map(campaign => {
                     const partner = partners.find(p => p.id === campaign.partnerId);

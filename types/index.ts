@@ -29,7 +29,6 @@ export interface Campaign {
   productValue: number | null;
   deadline: Date | null;
   status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
-  collaborationType: 'BARTER' | 'PAID' | 'SPONSORED' | 'GIFTED' | 'EVENT';
   createdAt: string;
   updatedAt: string;
   partner: {
