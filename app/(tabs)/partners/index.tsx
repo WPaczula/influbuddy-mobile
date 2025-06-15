@@ -1,7 +1,7 @@
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useData } from '@/hooks/useData';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
@@ -10,11 +10,12 @@ import PartnerCard from '@/components/PartnerCard';
 import PartnerCardSkeleton from '@/components/PartnerCardSkeleton';
 import StatsBarSkeleton from '@/components/StatsBarSkeleton';
 import { Search, Plus, Users, UserPlus } from 'lucide-react-native';
+import { usePartners } from '@/hooks/queries/usePartners';
 
 export default function PartnersScreen() {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const { partners, loading } = useData();
+  const { data: partners = [], isLoading } = usePartners();
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
 
@@ -62,7 +63,7 @@ export default function PartnersScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {loading ? renderLoadingState() : (
+      {isLoading ? renderLoadingState() : (
         <>
           {/* Compact Search */}
           <View style={[styles.searchContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
@@ -124,7 +125,7 @@ export default function PartnersScreen() {
                   {searchQuery ? 'Nie znaleziono partnerów' : t.noPartnersYet}
                 </Text>
                 <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                  {searchQuery 
+                  {searchQuery
                     ? 'Spróbuj dostosować wyszukiwanie'
                     : 'Dodaj swojego pierwszego partnera, aby rozpocząć śledzenie sponsoringu!'
                   }
@@ -147,8 +148,8 @@ export default function PartnersScreen() {
           </ScrollView>
 
           {/* Floating Action Button */}
-          <TouchableOpacity 
-            style={styles.fab} 
+          <TouchableOpacity
+            style={styles.fab}
             onPress={handleAddPartner}
             activeOpacity={0.8}
           >

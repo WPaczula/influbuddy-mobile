@@ -159,11 +159,8 @@ export default function EditPartnerScreen() {
         }
       });
 
-      Alert.alert(
-        t.success,
-        t.partnerUpdated,
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
+      // Navigate back immediately after successful mutation
+      router.back();
     } catch (error) {
       Alert.alert(t.error, t.updatePartnerError);
     } finally {
