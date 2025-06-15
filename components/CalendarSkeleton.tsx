@@ -98,9 +98,9 @@ export default function CalendarSkeleton() {
           </View>
           
           {/* Calendar weeks skeleton */}
-          {Array.from({ length: 6 }).map((weekIndex) => (
+          {Array.from({ length: 6 }).map((_, weekIndex) => (
             <View key={weekIndex} style={styles.week}>
-              {Array.from({ length: 7 }).map((dayIndex) => (
+              {Array.from({ length: 7 }).map((_, dayIndex) => (
                 <View key={dayIndex} style={styles.day}>
                   <SkeletonBox width={20} height={16} style={{ marginBottom: 4 }} />
                   {/* Random dots for some days */}
