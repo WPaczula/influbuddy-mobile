@@ -324,7 +324,7 @@ const englishTranslations: Translations = {
   urgent: 'Urgent',
   recentCampaigns: 'Recent Campaigns',
   readyToStart: 'Ready to start?',
-  createFirstCampaign: 'Create your first campaign to begin tracking your influencer partnerships!',
+  createFirstCampaign: 'Create your first campaign to begin tracking your partnerships!',
 
   // Campaigns
   campaignDetails: 'Campaign Details',
