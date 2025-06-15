@@ -48,6 +48,7 @@ export interface Translations {
   editCampaign: string;
   updateCampaign: string;
   newCampaign: string;
+  createCampaign: string;
   campaignTitle: string;
   campaignDescription: string;
   campaignValue: string;
@@ -330,6 +331,7 @@ const englishTranslations: Translations = {
   editCampaign: 'Edit Campaign',
   updateCampaign: 'Update Campaign',
   newCampaign: 'New Campaign',
+  createCampaign: 'Create Campaign',
   campaignTitle: 'Campaign Title',
   campaignDescription: 'Description',
   campaignValue: 'Campaign Value',
@@ -612,6 +614,7 @@ const polishTranslations: Translations = {
   editCampaign: 'Edytuj kampanię',
   updateCampaign: 'Aktualizuj kampanię',
   newCampaign: 'Nowa kampania',
+  createCampaign: 'Utwórz kampanię',
   campaignTitle: 'Tytuł kampanii',
   campaignDescription: 'Opis',
   campaignValue: 'Wartość kampanii',

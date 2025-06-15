@@ -43,6 +43,7 @@ export const en: Translations = {
   // Campaigns
   campaignDetails: 'Campaign Details',
   newCampaign: 'New Campaign',
+  createCampaign: 'Create Campaign',
   campaignTitle: 'Campaign Title',
   campaignDescription: 'Campaign Description',
   campaignValue: 'Campaign Value',

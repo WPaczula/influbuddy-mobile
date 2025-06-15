@@ -355,7 +355,7 @@ export default function AddCampaignScreen() {
             disabled={isSubmitting}
           >
             <Text style={styles.submitButtonText}>
-              {isSubmitting ? t.creating : t.createAccount}
+              {isSubmitting ? t.creating : t.createCampaign}
             </Text>
           </TouchableOpacity>
         </View>
