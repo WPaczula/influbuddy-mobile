@@ -5,8 +5,7 @@ import { useData } from '@/hooks/useData';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
-import { Partner } from '@/types';
-import { ArrowLeft, Calendar, DollarSign, Plus, X, ChevronDown, Building2, Check, Save } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Plus, X, ChevronDown, Check, Save } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface CampaignForm {
@@ -92,7 +91,7 @@ export default function AddCampaignScreen() {
         partnerId: form.partnerId,
         productValue: Number(form.amount.replace(/,/g, '')),
         requirements: form.requirements.filter(req => req.trim()),
-        deadline: form.deadline,
+        deadline: form.deadline.toISOString(),
         status: 'DRAFT',
       });
 
@@ -218,8 +217,8 @@ export default function AddCampaignScreen() {
                     </Text>
                   </View>
                   <View style={styles.partnerInfo}>
-                    <Text style={[styles.partnerName, { color: theme.colors.text }]}>{selectedPartner.name}</Text>
-                    <Text style={[styles.partnerCompany, { color: theme.colors.textSecondary }]}>{selectedPartner.company}</Text>
+                    <Text style={[styles.partnerName, { color: theme.colors.text }]}>{selectedPartner.company}</Text>
+                    <Text style={[styles.partnerCompany, { color: theme.colors.textSecondary }]}>{selectedPartner.name}</Text>
                   </View>
                 </View>
               ) : (
@@ -394,11 +393,8 @@ export default function AddCampaignScreen() {
                   </Text>
                 </View>
                 <View style={styles.partnerDetails}>
-                  <Text style={[styles.partnerName, { color: theme.colors.text }]}>{partner.name}</Text>
-                  <View style={styles.partnerCompanyRow}>
-                    <Building2 size={14} color={theme.colors.textSecondary} />
-                    <Text style={[styles.partnerCompany, { color: theme.colors.textSecondary }]}>{partner.company}</Text>
-                  </View>
+                  <Text style={[styles.partnerName, { color: theme.colors.text }]}>{partner.company}</Text>
+                  <Text style={[styles.partnerCompany, { color: theme.colors.textSecondary }]}>{partner.name}</Text>
                 </View>
                 {form.partnerId === partner.id && (
                   <Check size={20} color={theme.colors.primary} />

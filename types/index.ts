@@ -28,7 +28,7 @@ export interface Campaign {
   partnerId: string;
   productValue: number | null;
   requirements: string[];
-  deadline: Date | null;
+  deadline: string | null;
   status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
   createdAt: string;
   updatedAt: string;
