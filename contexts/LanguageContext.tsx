@@ -270,7 +270,6 @@ export interface Translations {
   enterDescription: string;
   partner: string;
   amount: string;
-  collaborationType: string;
 
   // Campaign Summary Template
   campaignUpdateGreeting: string; // "Hey {{partnerName}}!"
@@ -324,7 +323,7 @@ const englishTranslations: Translations = {
   urgent: 'Urgent',
   recentCampaigns: 'Recent Campaigns',
   readyToStart: 'Ready to start?',
-  createFirstCampaign: 'Create your first campaign to begin tracking your influencer partnerships!',
+  createFirstCampaign: 'Create your first campaign to begin tracking your partnerships!',
 
   // Campaigns
   campaignDetails: 'Campaign Details',
@@ -553,7 +552,6 @@ const englishTranslations: Translations = {
   enterDescription: 'Enter Description',
   partner: 'Partner',
   amount: 'Amount',
-  collaborationType: 'Collaboration Type',
 
   // Campaign Summary Template
   campaignUpdateGreeting: 'Hey {{partnerName}}!',
@@ -607,7 +605,7 @@ const polishTranslations: Translations = {
   urgent: 'Pilne',
   recentCampaigns: 'Ostatnie kampanie',
   readyToStart: 'Gotowy na start?',
-  createFirstCampaign: 'Utwórz swoją pierwszą kampanię, aby rozpocząć śledzenie współpracy z influencerami!',
+  createFirstCampaign: 'Utwórz swoją pierwszą kampanię, aby rozpocząć śledzenie współpracy!',
 
   // Campaigns
   campaignDetails: 'Szczegóły kampanii',
@@ -836,7 +834,6 @@ const polishTranslations: Translations = {
   enterDescription: 'Enter Description',
   partner: 'Partner',
   amount: 'Amount',
-  collaborationType: 'Collaboration Type',
 
   // Campaign Summary Template
   campaignUpdateGreeting: 'Cześć {{partnerName}}!',

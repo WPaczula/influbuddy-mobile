@@ -20,35 +20,49 @@ export default function CampaignCard({ campaign, onPress }: CampaignCardProps) {
     
     const deadline = new Date(campaign.deadline);
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time for accurate day comparison
+    deadline.setHours(0, 0, 0, 0);
+    
     const diffTime = deadline.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
     const formattedDate = deadline.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: deadline.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
+      year: deadline.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
     });
 
     let urgencyColor = theme.colors.textSecondary;
     let isUrgent = false;
+    let statusText = formattedDate;
     
-    if (diffDays < 0) {
-      urgencyColor = theme.colors.error;
-      isUrgent = true;
-    } else if (diffDays === 0) {
-      urgencyColor = theme.colors.warning;
-      isUrgent = true;
-    } else if (diffDays <= 3) {
-      urgencyColor = theme.colors.warning;
-      isUrgent = true;
-    } else if (diffDays <= 7) {
-      urgencyColor = theme.colors.primary;
+    // Only show urgency for non-completed and non-cancelled campaigns
+    if (campaign.status !== 'COMPLETED' && campaign.status !== 'CANCELLED') {
+      if (diffDays < 0) {
+        // Overdue
+        urgencyColor = theme.colors.error;
+        isUrgent = true;
+        const overdueDays = Math.abs(diffDays);
+        statusText = `${overdueDays} day${overdueDays !== 1 ? 's' : ''} overdue`;
+      } else if (diffDays === 0) {
+        // Due today
+        urgencyColor = theme.colors.warning;
+        isUrgent = true;
+        statusText = 'Due today';
+      } else if (diffDays <= 3) {
+        urgencyColor = theme.colors.warning;
+        isUrgent = true;
+      } else if (diffDays <= 7) {
+        urgencyColor = theme.colors.primary;
+      }
     }
 
     return {
-      formattedDate,
+      formattedDate: statusText,
       urgencyColor,
       isUrgent,
+      isOverdue: diffDays < 0 && campaign.status !== 'COMPLETED' && campaign.status !== 'CANCELLED',
+      isDueToday: diffDays === 0 && campaign.status !== 'COMPLETED' && campaign.status !== 'CANCELLED',
     };
   };
 

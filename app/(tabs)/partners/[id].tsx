@@ -82,7 +82,7 @@ export default function PartnerDetailsScreen() {
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} numberOfLines={1}>
-          {partner.name}
+          {partner.company}
         </Text>
         <TouchableOpacity onPress={handleEdit} style={[styles.headerButton, { backgroundColor: theme.colors.borderLight }]}>
           <Pencil size={18} color={theme.colors.textSecondary} />
@@ -93,15 +93,14 @@ export default function PartnerDetailsScreen() {
         <View style={[styles.profileSection, { backgroundColor: theme.colors.surface }]}>
           <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
             <Text style={styles.avatarText}>
-              {partner.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+              {partner.company.split(' ').map(n => n[0]).join('').toUpperCase()}
             </Text>
           </View>
 
           <View style={styles.profileInfo}>
-            <Text style={[styles.partnerName, { color: theme.colors.text }]}>{partner.name}</Text>
-            <View style={styles.companyRow}>
-              <Building2 size={16} color={theme.colors.textSecondary} />
-              <Text style={[styles.companyName, { color: theme.colors.textSecondary }]}>{partner.company}</Text>
+            <Text style={[styles.companyName, { color: theme.colors.text }]}>{partner.company}</Text>
+            <View style={styles.contactRow}>
+              <Text style={[styles.partnerName, { color: theme.colors.textSecondary }]}>{partner.name}</Text>
             </View>
             <Text style={[styles.joinDate, { color: theme.colors.textTertiary }]}>
               {t.partnerSince} {formatDate(partner.createdAt)}
@@ -217,7 +216,7 @@ export default function PartnerDetailsScreen() {
             <Users size={48} color={theme.colors.border} />
             <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>Brak kampanii</Text>
             <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-              Rozpocznij swoją pierwszą kampanię z {partner.name}, aby ją tutaj zobaczyć
+              Rozpocznij swoją pierwszą kampanię z {partner.company}, aby ją tutaj zobaczyć
             </Text>
           </View>
         )}
@@ -287,20 +286,19 @@ function createStyles(theme: any) {
     profileInfo: {
       alignItems: 'center',
     },
-    partnerName: {
+    companyName: {
       fontSize: 24,
       fontFamily: 'Inter-Bold',
       marginBottom: 8,
+      textAlign: 'center',
     },
-    companyRow: {
-      flexDirection: 'row',
+    contactRow: {
       alignItems: 'center',
-      gap: 8,
       marginBottom: 8,
     },
-    companyName: {
-      fontSize: 18,
-      fontFamily: 'Inter-SemiBold',
+    partnerName: {
+      fontSize: 16,
+      fontFamily: 'Inter-Medium',
     },
     joinDate: {
       fontSize: 14,

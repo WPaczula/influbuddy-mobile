@@ -62,15 +62,14 @@ export default function PartnerCard({ partner, onPress }: PartnerCardProps) {
             style={styles.avatar}
           >
             <Text style={styles.avatarText}>
-              {partner.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+              {partner.company.split(' ').map(n => n[0]).join('').toUpperCase()}
             </Text>
           </LinearGradient>
           
           <View style={styles.info}>
-            <Text style={[styles.name, { color: theme.colors.text }]}>{partner.name}</Text>
-            <View style={styles.companyRow}>
-              <Building2 size={14} color={theme.colors.textSecondary} />
-              <Text style={[styles.company, { color: theme.colors.textSecondary }]}>{partner.company}</Text>
+            <Text style={[styles.company, { color: theme.colors.text }]}>{partner.company}</Text>
+            <View style={styles.nameRow}>
+              <Text style={[styles.name, { color: theme.colors.textSecondary }]}>{partner.name}</Text>
             </View>
           </View>
           
@@ -151,17 +150,16 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
   },
-  name: {
+  company: {
     fontSize: 18,
     fontFamily: 'Inter-Bold',
     marginBottom: 4,
   },
-  companyRow: {
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
   },
-  company: {
+  name: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
   },

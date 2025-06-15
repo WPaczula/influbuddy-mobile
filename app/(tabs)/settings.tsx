@@ -7,7 +7,7 @@ import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { useRouter } from 'expo-router';
 import { UserProfile } from '@/types';
-import { User, Bell, Shield, CircleHelp as HelpCircle, Star, LogOut, ChevronRight, Moon, Globe, Download, CreditCard as Edit, Save, X, Camera, Mail, Link as LinkIcon, Instagram, Youtube, Twitter, Check } from 'lucide-react-native';
+import { User, Bell, Shield, CircleHelp as HelpCircle, Star, LogOut, ChevronRight, Moon, Globe, Download, CreditCard as Edit, Save, X, Camera, Mail, Link as LinkIcon, Instagram, Youtube, Twitter, Check, Clock } from 'lucide-react-native';
 
 interface SettingItem {
   icon: React.ReactNode;
@@ -19,15 +19,25 @@ interface SettingItem {
   onToggle?: (value: boolean) => void;
 }
 
+interface NotificationSettings {
+  enabled: boolean;
+  timings: ('hour' | 'day' | 'week')[];
+}
+
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const { user, signOut, updateUserProfile } = useAuth();
   const { getDashboardStats } = useData();
   const router = useRouter();
-  const [notifications, setNotifications] = useState(true);
+  const [notifications, setNotifications] = useState<NotificationSettings>({
+    enabled: true,
+    timings: ['day']
+  });
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [tempNotificationTimings, setTempNotificationTimings] = useState<('hour' | 'day' | 'week')[]>(['day']);
   const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
   const [isUpdating, setIsUpdating] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -165,6 +175,74 @@ export default function SettingsScreen() {
     return lang === 'en' ? 'English' : 'Polski';
   };
 
+  const getNotificationTimingLabel = (timing: 'hour' | 'day' | 'week') => {
+    switch (timing) {
+      case 'hour':
+        return 'Hour before';
+      case 'day':
+        return 'Day before';
+      case 'week':
+        return 'Week before';
+    }
+  };
+
+  const getNotificationSubtitle = () => {
+    if (!notifications.enabled) {
+      return t.campaignDeadlinesUpdates;
+    }
+    
+    if (notifications.timings.length === 0) {
+      return `${t.campaignDeadlinesUpdates} • No timings selected`;
+    }
+    
+    if (notifications.timings.length === 1) {
+      return `${t.campaignDeadlinesUpdates} • ${getNotificationTimingLabel(notifications.timings[0])}`;
+    }
+    
+    return `${t.campaignDeadlinesUpdates} • ${notifications.timings.length} timings selected`;
+  };
+
+  const handleNotificationToggle = (enabled: boolean) => {
+    if (enabled) {
+      // If enabling notifications, show timing selection
+      setTempNotificationTimings([...notifications.timings]);
+      setShowNotificationModal(true);
+    } else {
+      // If disabling, just turn off
+      setNotifications(prev => ({ ...prev, enabled: false }));
+      console.log('Notifications disabled');
+    }
+  };
+
+  const toggleNotificationTiming = (timing: 'hour' | 'day' | 'week') => {
+    setTempNotificationTimings(prev => {
+      if (prev.includes(timing)) {
+        return prev.filter(t => t !== timing);
+      } else {
+        return [...prev, timing];
+      }
+    });
+  };
+
+  const handleSaveNotificationSettings = () => {
+    setNotifications({
+      enabled: true,
+      timings: tempNotificationTimings
+    });
+    setShowNotificationModal(false);
+    
+    // Here you would typically save to backend
+    console.log('Notification settings saved:', {
+      enabled: true,
+      timings: tempNotificationTimings
+    });
+  };
+
+  const handleCancelNotificationSettings = () => {
+    setTempNotificationTimings([...notifications.timings]);
+    setShowNotificationModal(false);
+  };
+
   const settingsData: SettingItem[] = [
     {
       icon: <User size={20} color={theme.colors.textSecondary} />,
@@ -176,10 +254,10 @@ export default function SettingsScreen() {
     {
       icon: <Bell size={20} color={theme.colors.textSecondary} />,
       title: t.notifications,
-      subtitle: t.campaignDeadlinesUpdates,
+      subtitle: getNotificationSubtitle(),
       type: 'toggle',
-      value: notifications,
-      onToggle: setNotifications,
+      value: notifications.enabled,
+      onToggle: handleNotificationToggle,
     },
     {
       icon: <Moon size={20} color={theme.colors.textSecondary} />,
@@ -337,6 +415,135 @@ export default function SettingsScreen() {
           <Text style={[styles.footerText, { color: theme.colors.textTertiary }]}>{t.madeWithLove}</Text>
         </View>
       </ScrollView>
+
+      {/* Notification Timing Modal */}
+      <Modal
+        visible={showNotificationModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+            <TouchableOpacity
+              style={[styles.modalButton, { backgroundColor: theme.colors.borderLight }]}
+              onPress={handleCancelNotificationSettings}
+            >
+              <X size={24} color={theme.colors.textSecondary} />
+            </TouchableOpacity>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Notification Timing</Text>
+            <View style={styles.modalButton} />
+          </View>
+
+          <ScrollView style={styles.notificationContent}>
+            <View style={[styles.notificationHeader, { backgroundColor: theme.colors.surface }]}>
+              <View style={[styles.notificationIcon, { backgroundColor: theme.colors.primaryLight }]}>
+                <Bell size={24} color={theme.colors.primary} />
+              </View>
+              <Text style={[styles.notificationTitle, { color: theme.colors.text }]}>
+                When would you like to be reminded?
+              </Text>
+              <Text style={[styles.notificationSubtitle, { color: theme.colors.textSecondary }]}>
+                Select one or more notification timings for your campaign deadlines
+              </Text>
+            </View>
+
+            <View style={styles.timingOptions}>
+              {[
+                { key: 'hour', label: 'Hour before deadline', description: 'Get notified 1 hour before the deadline' },
+                { key: 'day', label: 'Day before deadline', description: 'Get notified 1 day before the deadline' },
+                { key: 'week', label: 'Week before deadline', description: 'Get notified 1 week before the deadline' }
+              ].map((option) => {
+                const isSelected = tempNotificationTimings.includes(option.key as 'hour' | 'day' | 'week');
+                
+                return (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[
+                      styles.timingOption,
+                      { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                      isSelected && { borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryLight }
+                    ]}
+                    onPress={() => toggleNotificationTiming(option.key as 'hour' | 'day' | 'week')}
+                  >
+                    <View style={styles.timingOptionContent}>
+                      <View style={styles.timingOptionHeader}>
+                        <Clock size={20} color={isSelected ? theme.colors.primary : theme.colors.textSecondary} />
+                        <Text style={[
+                          styles.timingOptionLabel,
+                          { color: theme.colors.text },
+                          isSelected && { color: theme.colors.primary, fontFamily: 'Inter-SemiBold' }
+                        ]}>
+                          {option.label}
+                        </Text>
+                      </View>
+                      <Text style={[
+                        styles.timingOptionDescription,
+                        { color: theme.colors.textSecondary },
+                        isSelected && { color: theme.colors.primary }
+                      ]}>
+                        {option.description}
+                      </Text>
+                    </View>
+                    <View style={[
+                      styles.checkbox,
+                      { borderColor: theme.colors.border },
+                      isSelected && { borderColor: theme.colors.primary, backgroundColor: theme.colors.primary }
+                    ]}>
+                      {isSelected && <Check size={16} color="white" />}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <View style={[styles.selectionSummary, { backgroundColor: theme.colors.surface }]}>
+              <Text style={[styles.selectionTitle, { color: theme.colors.text }]}>
+                Selected Timings ({tempNotificationTimings.length})
+              </Text>
+              {tempNotificationTimings.length > 0 ? (
+                <View style={styles.selectedTimings}>
+                  {tempNotificationTimings.map((timing) => (
+                    <View key={timing} style={[styles.selectedTiming, { backgroundColor: theme.colors.primaryLight }]}>
+                      <Text style={[styles.selectedTimingText, { color: theme.colors.primary }]}>
+                        {getNotificationTimingLabel(timing)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={[styles.noSelectionText, { color: theme.colors.textSecondary }]}>
+                  No notification timings selected
+                </Text>
+              )}
+            </View>
+          </ScrollView>
+
+          <View style={[styles.modalFooter, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border }]}>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.cancelButton, { backgroundColor: theme.colors.borderLight }]}
+                onPress={handleCancelNotificationSettings}
+              >
+                <Text style={[styles.cancelButtonText, { color: theme.colors.textSecondary }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.saveButton, 
+                  { backgroundColor: theme.colors.primary },
+                  tempNotificationTimings.length === 0 && { opacity: 0.5 }
+                ]}
+                onPress={handleSaveNotificationSettings}
+                disabled={tempNotificationTimings.length === 0}
+              >
+                <Save size={16} color="white" />
+                <Text style={styles.saveButtonText}>
+                  Save Settings
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
 
       {/* Language Selection Modal */}
       <Modal
@@ -788,6 +995,139 @@ function createStyles(theme: any) {
     modalScrollContent: {
       padding: 20,
     },
+    // Notification timing modal styles
+    notificationContent: {
+      flex: 1,
+      padding: 20,
+    },
+    notificationHeader: {
+      alignItems: 'center',
+      padding: 24,
+      borderRadius: 16,
+      marginBottom: 24,
+    },
+    notificationIcon: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    notificationTitle: {
+      fontSize: 20,
+      fontFamily: 'Inter-Bold',
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    notificationSubtitle: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      textAlign: 'center',
+      lineHeight: 20,
+    },
+    timingOptions: {
+      gap: 12,
+      marginBottom: 24,
+    },
+    timingOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 20,
+      borderRadius: 16,
+      borderWidth: 2,
+    },
+    timingOptionContent: {
+      flex: 1,
+    },
+    timingOptionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 4,
+    },
+    timingOptionLabel: {
+      fontSize: 16,
+      fontFamily: 'Inter-Medium',
+    },
+    timingOptionDescription: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      lineHeight: 20,
+    },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 4,
+      borderWidth: 2,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    selectionSummary: {
+      padding: 20,
+      borderRadius: 16,
+      marginBottom: 20,
+    },
+    selectionTitle: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      marginBottom: 12,
+    },
+    selectedTimings: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    selectedTiming: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+    },
+    selectedTimingText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+    },
+    noSelectionText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      fontStyle: 'italic',
+    },
+    modalFooter: {
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderTopWidth: 1,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    cancelButton: {
+      flex: 1,
+      paddingVertical: 16,
+      borderRadius: 12,
+      alignItems: 'center',
+    },
+    cancelButtonText: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+    },
+    saveButton: {
+      flex: 2,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 16,
+      borderRadius: 12,
+      gap: 8,
+    },
+    saveButtonDisabled: {
+      opacity: 0.6,
+    },
+    saveButtonText: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      color: 'white',
+    },
     languageOptions: {
       flex: 1,
     },
@@ -900,35 +1240,6 @@ function createStyles(theme: any) {
     },
     platformIcon: {
       fontSize: 20,
-    },
-    modalActions: {
-      flexDirection: 'row',
-      gap: 12,
-      marginTop: 8,
-    },
-    cancelButton: {
-      flex: 1,
-      paddingVertical: 16,
-      borderRadius: 12,
-      alignItems: 'center',
-    },
-    cancelButtonText: {
-      fontSize: 16,
-      fontFamily: 'Inter-SemiBold',
-    },
-    saveButton: {
-      flex: 2,
-      paddingVertical: 16,
-      borderRadius: 12,
-      alignItems: 'center',
-    },
-    saveButtonDisabled: {
-      opacity: 0.6,
-    },
-    saveButtonText: {
-      fontSize: 16,
-      fontFamily: 'Inter-SemiBold',
-      color: 'white',
     },
   });
 }

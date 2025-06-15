@@ -262,5 +262,4 @@ export const en: Translations = {
   enterDescription: 'Enter campaign description',
   partner: 'Partner',
   amount: 'Amount',
-  collaborationType: 'Collaboration Type',
 }; 

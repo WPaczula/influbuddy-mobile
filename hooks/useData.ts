@@ -51,7 +51,7 @@ export function useData() {
     }
   };
 
-  const addCampaign = async (campaign: Omit<Campaign, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addCampaign = async (campaign: Omit<Campaign, 'id' | 'createdAt' | 'updatedAt' | 'partner'>) => {
     try {
       const newCampaign = await campaignsService.create(campaign);
       await loadData(); // Reload all data after adding a campaign

@@ -1,5 +1,6 @@
 import { Campaign } from '@/types';
 import { api } from './api';
+import { CreateCampaignInput } from '@/hooks/queries/useCampaigns';
 
 export const campaignsService = {
   async list(): Promise<Campaign[]> {
@@ -22,7 +23,7 @@ export const campaignsService = {
     }
   },
 
-  async create(campaign: Omit<Campaign, 'id' | 'createdAt' | 'updatedAt'>): Promise<Campaign> {
+  async create(campaign: CreateCampaignInput): Promise<Campaign> {
     try {
       const response = await api.post<Campaign>('/campaigns', campaign);
       return response.data;
