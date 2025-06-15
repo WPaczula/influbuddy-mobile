@@ -95,6 +95,32 @@ export default function CalendarScreen() {
     });
   };
 
+  const getDayDeadlineStatus = (day: number) => {
+    const dayCampaigns = getDayCampaigns(day);
+    if (dayCampaigns.length === 0) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const dayDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), day);
+    dayDate.setHours(0, 0, 0, 0);
+    
+    const diffTime = dayDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Check if any campaigns are overdue or due today (and not completed/cancelled)
+    const hasOverdue = dayCampaigns.some(campaign => 
+      diffDays < 0 && campaign.status !== 'COMPLETED' && campaign.status !== 'CANCELLED'
+    );
+    const hasDueToday = dayCampaigns.some(campaign => 
+      diffDays === 0 && campaign.status !== 'COMPLETED' && campaign.status !== 'CANCELLED'
+    );
+
+    if (hasOverdue) return 'overdue';
+    if (hasDueToday) return 'dueToday';
+    return 'normal';
+  };
+
   const getSelectedDayCampaigns = () => {
     if (!selectedDay) return [];
     return getDayCampaigns(selectedDay);
@@ -227,18 +253,48 @@ export default function CalendarScreen() {
             <View key={weekIndex} style={styles.week}>
               {week.map((day, dayIndex) => {
                 const dayCampaigns = day ? getDayCampaigns(day) : [];
+                const deadlineStatus = day ? getDayDeadlineStatus(day) : null;
                 const isToday = day && 
                   new Date().getDate() === day &&
                   new Date().getMonth() === selectedMonth.getMonth() &&
                   new Date().getFullYear() === selectedMonth.getFullYear();
                 const hasDeadlines = dayCampaigns.length > 0;
                 
+                // Get the appropriate colors based on deadline status
+                let dayBackgroundColor = 'transparent';
+                let dayBorderColor = 'transparent';
+                let dayTextColor = theme.colors.text;
+                
+                if (hasDeadlines && deadlineStatus) {
+                  switch (deadlineStatus) {
+                    case 'overdue':
+                      dayBackgroundColor = theme.colors.errorLight;
+                      dayBorderColor = theme.colors.error;
+                      dayTextColor = theme.colors.error;
+                      break;
+                    case 'dueToday':
+                      dayBackgroundColor = theme.colors.warningLight;
+                      dayBorderColor = theme.colors.warning;
+                      dayTextColor = theme.colors.warning;
+                      break;
+                    case 'normal':
+                      dayBackgroundColor = theme.colors.borderLight;
+                      dayBorderColor = theme.colors.border;
+                      dayTextColor = theme.colors.primary;
+                      break;
+                  }
+                }
+                
                 return (
                   <TouchableOpacity
                     key={dayIndex}
                     style={[
                       styles.day,
-                      hasDeadlines && [styles.dayWithDeadlines, { backgroundColor: theme.colors.borderLight, borderColor: theme.colors.border }]
+                      hasDeadlines && {
+                        backgroundColor: dayBackgroundColor,
+                        borderColor: dayBorderColor,
+                        borderWidth: 1,
+                      }
                     ]}
                     onPress={() => day && handleDayPress(day)}
                     disabled={!day || !hasDeadlines}
@@ -248,19 +304,28 @@ export default function CalendarScreen() {
                       <>
                         <Text style={[
                           styles.dayNumber,
-                          { color: theme.colors.text },
+                          { color: dayTextColor },
                           isToday && [styles.todayNumber, { color: theme.colors.primary, backgroundColor: theme.colors.primaryLight }],
-                          hasDeadlines && { color: theme.colors.primary }
+                          hasDeadlines && !isToday && { color: dayTextColor }
                         ]}>
                           {day}
                         </Text>
                         {dayCampaigns.length > 0 && (
                           <View style={styles.campaignDots}>
-                            {dayCampaigns.slice(0, 3).map((_, index) => (
-                              <View key={index} style={[styles.campaignDot, { backgroundColor: theme.colors.primary }]} />
-                            ))}
+                            {dayCampaigns.slice(0, 3).map((_, index) => {
+                              let dotColor = theme.colors.primary;
+                              if (deadlineStatus === 'overdue') {
+                                dotColor = theme.colors.error;
+                              } else if (deadlineStatus === 'dueToday') {
+                                dotColor = theme.colors.warning;
+                              }
+                              
+                              return (
+                                <View key={index} style={[styles.campaignDot, { backgroundColor: dotColor }]} />
+                              );
+                            })}
                             {dayCampaigns.length > 3 && (
-                              <Text style={[styles.moreDots, { color: theme.colors.primary }]}>+{dayCampaigns.length - 3}</Text>
+                              <Text style={[styles.moreDots, { color: dayTextColor }]}>+{dayCampaigns.length - 3}</Text>
                             )}
                           </View>
                         )}
@@ -555,9 +620,6 @@ function createStyles(theme: any) {
       padding: 4,
       alignItems: 'center',
       borderRadius: 8,
-    },
-    dayWithDeadlines: {
-      borderWidth: 1,
     },
     dayNumber: {
       fontSize: 16,
