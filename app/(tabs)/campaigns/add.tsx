@@ -7,6 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
 import { ArrowLeft, Calendar, Plus, X, ChevronDown, Check, Save } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useCreateCampaign } from '@/hooks/queries/useCampaigns';
 
 interface CampaignForm {
   title: string;
@@ -23,6 +24,7 @@ export default function AddCampaignScreen() {
   const { t, language } = useLanguage();
   const router = useRouter();
   const { partners, addCampaign } = useData();
+  const createCampaign = useCreateCampaign();
 
   const [form, setForm] = useState<CampaignForm>({
     title: '',
@@ -83,27 +85,20 @@ export default function AddCampaignScreen() {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    setIsSubmitting(true);
     try {
-      await addCampaign({
+      await createCampaign.mutateAsync({
         title: form.title.trim(),
         description: form.description.trim(),
         partnerId: form.partnerId,
         productValue: Number(form.amount.replace(/,/g, '')),
         requirements: form.requirements.filter(req => req.trim()),
-        deadline: form.deadline.toISOString(),
+        deadline: form.deadline,
         status: 'DRAFT',
       });
 
-      Alert.alert(
-        t.success,
-        t.campaignCreated,
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
+      router.push('/(tabs)/campaigns');
     } catch (error) {
       Alert.alert(t.error, t.createCampaignError);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

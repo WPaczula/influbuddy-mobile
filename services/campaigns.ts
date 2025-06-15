@@ -54,7 +54,7 @@ export const campaignsService = {
 
   async addPost(campaignId: string, postUrl: string): Promise<Campaign> {
     try {
-      const response = await api.post<{ campaign: Campaign }>(`/api/v1/campaigns/${campaignId}/posts`, {
+      const response = await api.post<{ campaign: Campaign }>(`campaigns/${campaignId}/posts`, {
         postUrl,
       });
       return response.data.campaign;
@@ -64,20 +64,9 @@ export const campaignsService = {
     }
   },
 
-  async removePost(campaignId: string, postUrl: string): Promise<Campaign> {
-    try {
-      const response = await api.delete<{ campaign: Campaign }>(`/api/v1/campaigns/${campaignId}/posts`, {
-      });
-      return response.data.campaign;
-    } catch (error) {
-      console.error('Error removing post from campaign:', error);
-      throw error;
-    }
-  },
-
   async updatePosts(campaignId: string, postLinks: string[]): Promise<Campaign> {
     try {
-      const response = await api.put<{ campaign: Campaign }>(`/api/v1/campaigns/${campaignId}/posts`, {
+      const response = await api.put<{ campaign: Campaign }>(`campaigns/${campaignId}/posts`, {
         postLinks,
       });
       return response.data.campaign;

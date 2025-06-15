@@ -18,6 +18,7 @@ export interface CreateCampaignInput {
   productValue: number;
   deadline: Date;
   status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  requirements: string[];
 }
 
 export function useCreateCampaign() {
