@@ -607,7 +607,7 @@ const polishTranslations: Translations = {
   urgent: 'Pilne',
   recentCampaigns: 'Ostatnie kampanie',
   readyToStart: 'Gotowy na start?',
-  createFirstCampaign: 'Utwórz swoją pierwszą kampanię, aby rozpocząć śledzenie współpracy z influencerami!',
+  createFirstCampaign: 'Utwórz swoją pierwszą kampanię, aby rozpocząć śledzenie współpracy!',
 
   // Campaigns
   campaignDetails: 'Szczegóły kampanii',
