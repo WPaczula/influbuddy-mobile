@@ -36,14 +36,13 @@ interface User {
 }
 
 interface UserProfile {
-    name: string;
-    email: string;
-    bio: string;
-    website: string;
-    socialHandles: {
-        instagram: string;
-        tiktok: string;
-        youtube: string;
+    name?: string;
+    bio?: string;
+    website?: string;
+    socialHandles?: {
+        instagram?: string;
+        tiktok?: string;
+        youtube?: string;
     };
 }
 
@@ -185,12 +184,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
             // Update local user state
             if (user) {
-                const updatedUser = {
+                const updatedUser: User = {
                     ...user,
                     name: updates.name || user.name,
                     profile: {
                         ...user.profile,
                         ...updates,
+                        socialHandles: {
+                            instagram: updates.socialHandles?.instagram || user.profile.socialHandles.instagram,
+                            tiktok: updates.socialHandles?.tiktok || user.profile.socialHandles.tiktok,
+                            youtube: updates.socialHandles?.youtube || user.profile.socialHandles.youtube,
+                        },
                         updatedAt: new Date().toISOString(),
                     },
                 };

@@ -1,12 +1,12 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useData } from '@/hooks/useData';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useState, useEffect } from 'react';
 import { Partner } from '@/types';
 import { ArrowLeft, Save, Building2, Mail, Phone, Globe, FileText, User } from 'lucide-react-native';
+import { usePartner, useUpdatePartner } from '@/hooks/queries/usePartners';
 
 interface PartnerForm {
   name: string;
@@ -22,8 +22,10 @@ export default function EditPartnerScreen() {
   const { t } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { partners, updatePartner, loading } = useData();
-  
+
+  const { data: partner, isLoading } = usePartner(id);
+  const updatePartnerMutation = useUpdatePartner();
+
   const [form, setForm] = useState<PartnerForm>({
     name: '',
     company: '',
@@ -32,20 +34,11 @@ export default function EditPartnerScreen() {
     website: '',
     notes: '',
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [partner, setPartner] = useState<Partner | null>(null);
 
   const styles = createStyles(theme);
-
-  // Find partner when data loads or changes
-  useEffect(() => {
-    if (!loading && partners.length > 0 && id) {
-      const foundPartner = partners.find(p => p.id === id);
-      setPartner(foundPartner || null);
-    }
-  }, [partners, loading, id]);
 
   // Populate form when partner data is available
   useEffect(() => {
@@ -63,7 +56,7 @@ export default function EditPartnerScreen() {
   }, [partner, isLoaded]);
 
   // Show loading state while data is loading
-  if (loading) {
+  if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
@@ -81,7 +74,7 @@ export default function EditPartnerScreen() {
   }
 
   // Show error if partner not found after loading
-  if (!loading && !partner) {
+  if (!isLoading && !partner) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
@@ -154,15 +147,18 @@ export default function EditPartnerScreen() {
 
     setIsSubmitting(true);
     try {
-      await updatePartner(partner.id, {
-        name: form.name.trim(),
-        company: form.company.trim(),
-        email: form.email.trim().toLowerCase(),
-        phone: form.phone.trim() || undefined,
-        website: form.website.trim() || undefined,
-        notes: form.notes.trim() || undefined,
+      await updatePartnerMutation.mutateAsync({
+        id: partner.id,
+        updates: {
+          name: form.name.trim(),
+          company: form.company.trim(),
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone.trim() || undefined,
+          website: form.website.trim() || undefined,
+          notes: form.notes.trim() || undefined,
+        }
       });
-      
+
       Alert.alert(
         t.success,
         t.partnerUpdated,
@@ -190,8 +186,8 @@ export default function EditPartnerScreen() {
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>{t.editPartner}</Text>
-        <TouchableOpacity 
-          style={[styles.headerButton, { backgroundColor: theme.colors.primary }]} 
+        <TouchableOpacity
+          style={[styles.headerButton, { backgroundColor: theme.colors.primary }]}
           onPress={handleSubmit}
           disabled={isSubmitting}
         >

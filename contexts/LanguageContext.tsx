@@ -567,7 +567,6 @@ const englishTranslations: Translations = {
   partnerInformation: 'Partner information',
   socialMediaLinks: 'Social media links',
   previewReport: 'Preview Report',
-  shareReport: 'Share Report',
 };
 
 const polishTranslations: Translations = {
@@ -851,7 +850,6 @@ const polishTranslations: Translations = {
   partnerInformation: 'Informacje o partnerze',
   socialMediaLinks: 'Linki do mediów społecznościowych',
   previewReport: 'Podgląd raportu',
-  shareReport: 'Udostępnij raport',
 };
 
 const translations = {

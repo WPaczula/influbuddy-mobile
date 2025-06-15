@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from '@/contexts/FirebaseAuthContext';
 import * as SplashScreen from 'expo-splash-screen';
 import { View } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useNotifications } from '@/hooks/useNotifications';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -26,6 +27,7 @@ SplashScreen.preventAutoHideAsync();
 function RootLayoutContent() {
   const { theme, isLoaded: themeLoaded } = useTheme();
   const { isLoading: authLoading, isAuthenticated } = useAuth();
+  useNotifications(); // Initialize notifications
 
   const [fontsLoaded, fontError] = useFonts({
     'Inter-Regular': Inter_400Regular,

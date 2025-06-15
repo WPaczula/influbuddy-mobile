@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, browserLocalPersistence, setPersistence } from 'firebase/auth';
 
 // Your Firebase config - Replace with your actual config from Firebase Console
 const firebaseConfig = {
@@ -19,8 +19,9 @@ if (getApps().length === 0) {
   app = getApps()[0];
 }
 
-// Initialize Auth
+// Initialize Auth with persistence
 const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence);
 
 export { auth };
 export default app; 
