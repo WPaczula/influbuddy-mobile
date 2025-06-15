@@ -77,8 +77,49 @@ const CampaignDetailsScreen: React.FC = () => {
     if (!campaign?.deadline) return 0;
     const deadline = new Date(campaign.deadline);
     const today = new Date();
+    deadline.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
     const daysUntil = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return daysUntil;
+  };
+
+  const getDeadlineStatus = () => {
+    if (!campaign?.deadline) return null;
+    
+    const daysUntil = getDaysUntilDeadline();
+    
+    // Only show urgency for non-completed and non-cancelled campaigns
+    if (campaign.status === 'COMPLETED' || campaign.status === 'CANCELLED') {
+      return null;
+    }
+
+    if (daysUntil < 0) {
+      return {
+        type: 'overdue',
+        color: theme.colors.error,
+        backgroundColor: theme.colors.errorLight,
+        text: `${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} overdue`,
+        isUrgent: true
+      };
+    } else if (daysUntil === 0) {
+      return {
+        type: 'dueToday',
+        color: theme.colors.warning,
+        backgroundColor: theme.colors.warningLight,
+        text: 'Due today',
+        isUrgent: true
+      };
+    } else if (daysUntil <= 3) {
+      return {
+        type: 'urgent',
+        color: theme.colors.warning,
+        backgroundColor: theme.colors.warningLight,
+        text: `${daysUntil} day${daysUntil !== 1 ? 's' : ''} left`,
+        isUrgent: true
+      };
+    }
+
+    return null;
   };
 
   const updateStatus = async (newStatus: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED') => {
@@ -282,7 +323,7 @@ const CampaignDetailsScreen: React.FC = () => {
   };
 
   const daysUntil = getDaysUntilDeadline();
-  const isUrgent = daysUntil <= 3 && campaign?.status !== 'COMPLETED';
+  const deadlineStatus = getDeadlineStatus();
 
   const getPostTypeLabel = (postType: string) => {
     switch (postType.toLowerCase()) {
@@ -350,11 +391,17 @@ const CampaignDetailsScreen: React.FC = () => {
             </View>
           )}
 
-          {isUrgent && (
-            <View style={[styles.urgentBanner, { backgroundColor: theme.colors.errorLight, borderLeftColor: theme.colors.error }]}>
-              <Clock size={20} color={theme.colors.error} />
-              <Text style={[styles.urgentText, { color: theme.colors.error }]}>
-                {daysUntil === 0 ? t.dueToday : t.daysLeft.replace('{days}', daysUntil.toString())}
+          {deadlineStatus && (
+            <View style={[
+              styles.urgentBanner, 
+              { 
+                backgroundColor: deadlineStatus.backgroundColor, 
+                borderLeftColor: deadlineStatus.color 
+              }
+            ]}>
+              <Clock size={20} color={deadlineStatus.color} />
+              <Text style={[styles.urgentText, { color: deadlineStatus.color }]}>
+                {deadlineStatus.text}
               </Text>
             </View>
           )}
@@ -404,7 +451,7 @@ const CampaignDetailsScreen: React.FC = () => {
               <View style={styles.timelineStepLeft}>
                 <View style={[
                   styles.timelineIcon,
-                  { backgroundColor: isUrgent ? theme.colors.error : theme.colors.warning }
+                  { backgroundColor: deadlineStatus ? deadlineStatus.color : theme.colors.warning }
                 ]}>
                   <Calendar size={16} color="white" />
                 </View>
@@ -413,13 +460,13 @@ const CampaignDetailsScreen: React.FC = () => {
                 <Text style={[styles.timelineStepTitle, { color: theme.colors.text }]}>{t.deadline}</Text>
                 <Text style={[
                   styles.timelineStepValue,
-                  { color: isUrgent ? theme.colors.error : theme.colors.textSecondary }
+                  { color: deadlineStatus ? deadlineStatus.color : theme.colors.textSecondary }
                 ]}>
                   {campaign.deadline ? formatDate(campaign.deadline) : t.noDeadlines}
                 </Text>
-                {isUrgent && (
-                  <Text style={[styles.timelineStepSubtext, { color: theme.colors.error }]}>
-                    {daysUntil === 0 ? 'Due today!' : `${daysUntil} days left`}
+                {deadlineStatus && (
+                  <Text style={[styles.timelineStepSubtext, { color: deadlineStatus.color }]}>
+                    {deadlineStatus.text}
                   </Text>
                 )}
               </View>
