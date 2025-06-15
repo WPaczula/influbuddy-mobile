@@ -80,6 +80,8 @@ export interface Translations {
 
   // Partners
   partnerDetails: string;
+  editPartner: string;
+  updatePartner: string;
   newPartner: string;
   fullName: string;
   companyName: string;
@@ -355,6 +357,8 @@ const englishTranslations: Translations = {
 
   // Partners
   partnerDetails: 'Partner Details',
+  editPartner: 'Edit Partner',
+  updatePartner: 'Update Partner',
   newPartner: 'New Partner',
   fullName: 'Full Name',
   companyName: 'Company Name',
@@ -630,6 +634,8 @@ const polishTranslations: Translations = {
 
   // Partners
   partnerDetails: 'Szczegóły partnera',
+  editPartner: 'Edytuj partnera',
+  updatePartner: 'Aktualizuj partnera',
   newPartner: 'Nowy partner',
   fullName: 'Imię i nazwisko',
   companyName: 'Nazwa firmy',
