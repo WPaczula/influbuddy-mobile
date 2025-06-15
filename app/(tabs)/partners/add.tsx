@@ -8,8 +8,8 @@ import { ArrowLeft, Building2, Mail, Phone, Globe, FileText, User } from 'lucide
 import { useCreatePartner } from '@/hooks/queries/usePartners';
 
 interface PartnerForm {
-  name: string;
   company: string;
+  name: string;
   email: string;
   phone: string;
   website: string;
@@ -22,8 +22,8 @@ export default function AddPartnerScreen() {
   const router = useRouter();
   const createPartner = useCreatePartner();
   const [form, setForm] = useState<PartnerForm>({
-    name: '',
     company: '',
+    name: '',
     email: '',
     phone: '',
     website: '',
@@ -34,12 +34,12 @@ export default function AddPartnerScreen() {
   const styles = createStyles(theme);
 
   const validateForm = () => {
-    if (!form.name.trim()) {
-      Alert.alert(t.error, t.nameRequired);
-      return false;
-    }
     if (!form.company.trim()) {
       Alert.alert(t.error, t.companyRequired);
+      return false;
+    }
+    if (!form.name.trim()) {
+      Alert.alert(t.error, t.nameRequired);
       return false;
     }
     if (!form.email.trim()) {
@@ -69,8 +69,8 @@ export default function AddPartnerScreen() {
     setIsSubmitting(true);
     try {
       await createPartner.mutateAsync({
-        name: form.name.trim(),
         company: form.company.trim(),
+        name: form.name.trim(),
         email: form.email.trim().toLowerCase(),
         phone: form.phone.trim() || undefined,
         website: form.website.trim() || undefined,
@@ -106,7 +106,7 @@ export default function AddPartnerScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={[styles.avatarSection, { backgroundColor: theme.colors.surface }]}>
           <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.border }]}>
-            <User size={32} color={theme.colors.primary} />
+            <Building2 size={32} color={theme.colors.primary} />
           </View>
           <Text style={[styles.avatarText, { color: theme.colors.text }]}>{t.partnerAvatar}</Text>
           <Text style={[styles.avatarSubtext, { color: theme.colors.textSecondary }]}>{t.avatarGenerated}</Text>
@@ -116,21 +116,6 @@ export default function AddPartnerScreen() {
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.basicInformation}</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.fullName} *</Text>
-            <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
-              <User size={20} color={theme.colors.textSecondary} />
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                value={form.name}
-                onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
-                placeholder="np. Sarah Johnson"
-                placeholderTextColor={theme.colors.textTertiary}
-                autoCapitalize="words"
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
             <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.companyName} *</Text>
             <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
               <Building2 size={20} color={theme.colors.textSecondary} />
@@ -138,7 +123,22 @@ export default function AddPartnerScreen() {
                 style={[styles.input, { color: theme.colors.text }]}
                 value={form.company}
                 onChangeText={(text) => setForm(prev => ({ ...prev, company: text }))}
-                placeholder="np. TechStyle Fashion"
+                placeholder="e.g. TechStyle Fashion"
+                placeholderTextColor={theme.colors.textTertiary}
+                autoCapitalize="words"
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.fullName} *</Text>
+            <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
+              <User size={20} color={theme.colors.textSecondary} />
+              <TextInput
+                style={[styles.input, { color: theme.colors.text }]}
+                value={form.name}
+                onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
+                placeholder="e.g. Sarah Johnson"
                 placeholderTextColor={theme.colors.textTertiary}
                 autoCapitalize="words"
               />
@@ -174,7 +174,7 @@ export default function AddPartnerScreen() {
                 style={[styles.input, { color: theme.colors.text }]}
                 value={form.phone}
                 onChangeText={(text) => setForm(prev => ({ ...prev, phone: text }))}
-                placeholder="+48 555 123 456"
+                placeholder="+1 555 123 456"
                 placeholderTextColor={theme.colors.textTertiary}
                 keyboardType="phone-pad"
               />
@@ -189,7 +189,7 @@ export default function AddPartnerScreen() {
                 style={[styles.input, { color: theme.colors.text }]}
                 value={form.website}
                 onChangeText={(text) => setForm(prev => ({ ...prev, website: formatWebsite(text) }))}
-                placeholder="https://firma.com"
+                placeholder="https://company.com"
                 placeholderTextColor={theme.colors.textTertiary}
                 keyboardType="url"
                 autoCapitalize="none"
@@ -210,7 +210,7 @@ export default function AddPartnerScreen() {
                 style={[styles.input, styles.textArea, { color: theme.colors.text }]}
                 value={form.notes}
                 onChangeText={(text) => setForm(prev => ({ ...prev, notes: text }))}
-                placeholder="Dodaj notatki o tym partnerze, historię współpracy, preferencje itp."
+                placeholder="Add notes about this partner, collaboration history, preferences, etc."
                 placeholderTextColor={theme.colors.textTertiary}
                 multiline
                 numberOfLines={4}

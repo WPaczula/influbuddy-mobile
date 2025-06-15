@@ -9,8 +9,8 @@ import { ArrowLeft, Save, Building2, Mail, Phone, Globe, FileText, User } from '
 import { usePartner, useUpdatePartner } from '@/hooks/queries/usePartners';
 
 interface PartnerForm {
-  name: string;
   company: string;
+  name: string;
   email: string;
   phone: string;
   website: string;
@@ -27,8 +27,8 @@ export default function EditPartnerScreen() {
   const updatePartnerMutation = useUpdatePartner();
 
   const [form, setForm] = useState<PartnerForm>({
-    name: '',
     company: '',
+    name: '',
     email: '',
     phone: '',
     website: '',
@@ -44,8 +44,8 @@ export default function EditPartnerScreen() {
   useEffect(() => {
     if (partner && !isLoaded) {
       setForm({
-        name: partner.name || '',
         company: partner.company || '',
+        name: partner.name || '',
         email: partner.email || '',
         phone: partner.phone || '',
         website: partner.website || '',
@@ -113,12 +113,12 @@ export default function EditPartnerScreen() {
   }
 
   const validateForm = () => {
-    if (!form.name.trim()) {
-      Alert.alert(t.error, t.nameRequired);
-      return false;
-    }
     if (!form.company.trim()) {
       Alert.alert(t.error, t.companyRequired);
+      return false;
+    }
+    if (!form.name.trim()) {
+      Alert.alert(t.error, t.nameRequired);
       return false;
     }
     if (!form.email.trim()) {
@@ -150,8 +150,8 @@ export default function EditPartnerScreen() {
       await updatePartnerMutation.mutateAsync({
         id: partner.id,
         updates: {
-          name: form.name.trim(),
           company: form.company.trim(),
+          name: form.name.trim(),
           email: form.email.trim().toLowerCase(),
           phone: form.phone.trim() || undefined,
           website: form.website.trim() || undefined,
@@ -199,7 +199,7 @@ export default function EditPartnerScreen() {
         <View style={[styles.avatarSection, { backgroundColor: theme.colors.surface }]}>
           <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.primary }]}>
             <Text style={styles.avatarText}>
-              {form.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'P'}
+              {form.company.split(' ').map(n => n[0]).join('').toUpperCase() || 'C'}
             </Text>
           </View>
           <Text style={[styles.avatarTitle, { color: theme.colors.text }]}>{t.partnerAvatar}</Text>
@@ -210,21 +210,6 @@ export default function EditPartnerScreen() {
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.basicInformation}</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.fullName} *</Text>
-            <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
-              <User size={20} color={theme.colors.textSecondary} />
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                value={form.name}
-                onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
-                placeholder="e.g. Sarah Johnson"
-                placeholderTextColor={theme.colors.textTertiary}
-                autoCapitalize="words"
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
             <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.companyName} *</Text>
             <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
               <Building2 size={20} color={theme.colors.textSecondary} />
@@ -233,6 +218,21 @@ export default function EditPartnerScreen() {
                 value={form.company}
                 onChangeText={(text) => setForm(prev => ({ ...prev, company: text }))}
                 placeholder="e.g. TechStyle Fashion"
+                placeholderTextColor={theme.colors.textTertiary}
+                autoCapitalize="words"
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.fullName} *</Text>
+            <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
+              <User size={20} color={theme.colors.textSecondary} />
+              <TextInput
+                style={[styles.input, { color: theme.colors.text }]}
+                value={form.name}
+                onChangeText={(text) => setForm(prev => ({ ...prev, name: text }))}
+                placeholder="e.g. Sarah Johnson"
                 placeholderTextColor={theme.colors.textTertiary}
                 autoCapitalize="words"
               />
