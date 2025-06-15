@@ -2,12 +2,12 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withRepeat, 
-  withTiming, 
-  interpolate 
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  interpolate
 } from 'react-native-reanimated';
 
 export default function CalendarSkeleton() {
@@ -71,17 +71,17 @@ export default function CalendarSkeleton() {
 
       {/* Partner filter skeleton */}
       <View style={[styles.partnerFilter, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.partnerScrollContent}
         >
           {Array.from({ length: 4 }).map((_, index) => (
-            <SkeletonBox 
+            <SkeletonBox
               key={index}
-              width={80} 
-              height={28} 
-              style={{ borderRadius: 16, marginRight: 8 }} 
+              width={80}
+              height={28}
+              style={{ borderRadius: 16, marginRight: 8 }}
             />
           ))}
         </ScrollView>
@@ -96,11 +96,11 @@ export default function CalendarSkeleton() {
               <SkeletonBox key={index} width="12%" height={14} />
             ))}
           </View>
-          
+
           {/* Calendar weeks skeleton */}
-          {Array.from({ length: 6 }).map((weekIndex) => (
+          {Array.from({ length: 6 }).map((_, weekIndex) => (
             <View key={weekIndex} style={styles.week}>
-              {Array.from({ length: 7 }).map((dayIndex) => (
+              {Array.from({ length: 7 }).map((_, dayIndex) => (
                 <View key={dayIndex} style={styles.day}>
                   <SkeletonBox width={20} height={16} style={{ marginBottom: 4 }} />
                   {/* Random dots for some days */}
@@ -119,7 +119,7 @@ export default function CalendarSkeleton() {
         {/* Campaigns list skeleton */}
         <View style={styles.campaignsList}>
           <SkeletonBox width="60%" height={20} style={{ marginBottom: 16 }} />
-          
+
           {Array.from({ length: 3 }).map((_, index) => (
             <View key={index} style={[styles.campaignCardSkeleton, { backgroundColor: theme.colors.surface }]}>
               <View style={styles.campaignCardHeader}>

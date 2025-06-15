@@ -364,7 +364,7 @@ const CampaignDetailsScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.timeline}</Text>
           <View style={[styles.timelineContainer, { backgroundColor: theme.colors.surface }]}>
-            
+
             {/* Campaign Value */}
             {campaign.productValue && (
               <View style={styles.timelineStep}>
@@ -403,7 +403,7 @@ const CampaignDetailsScreen: React.FC = () => {
             <View style={[styles.timelineStep, styles.timelineStepLast]}>
               <View style={styles.timelineStepLeft}>
                 <View style={[
-                  styles.timelineIcon, 
+                  styles.timelineIcon,
                   { backgroundColor: isUrgent ? theme.colors.error : theme.colors.warning }
                 ]}>
                   <Calendar size={16} color="white" />
@@ -412,7 +412,7 @@ const CampaignDetailsScreen: React.FC = () => {
               <View style={styles.timelineStepRight}>
                 <Text style={[styles.timelineStepTitle, { color: theme.colors.text }]}>{t.deadline}</Text>
                 <Text style={[
-                  styles.timelineStepValue, 
+                  styles.timelineStepValue,
                   { color: isUrgent ? theme.colors.error : theme.colors.textSecondary }
                 ]}>
                   {campaign.deadline ? formatDate(campaign.deadline) : t.noDeadlines}
@@ -471,7 +471,7 @@ const CampaignDetailsScreen: React.FC = () => {
         {/* Enhanced Campaign Summary Section */}
         <View style={styles.summarySection}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.campaignSummary}</Text>
-          
+
           {/* Main Summary Card */}
           <View style={[styles.summaryMainCard, { backgroundColor: theme.colors.surface }]}>
             <View style={styles.summaryHeader}>
@@ -479,9 +479,9 @@ const CampaignDetailsScreen: React.FC = () => {
                 <FileText size={28} color={theme.colors.primary} />
               </View>
               <View style={styles.summaryHeaderText}>
-                <Text style={[styles.summaryMainTitle, { color: theme.colors.text }]}>Generate Campaign Report</Text>
+                <Text style={[styles.summaryMainTitle, { color: theme.colors.text }]}>{t.generateCampaignReport}</Text>
                 <Text style={[styles.summaryMainSubtitle, { color: theme.colors.textSecondary }]}>
-                  Create a professional summary to share with {campaign.partner.company}
+                  {t.createProfessionalSummary} {campaign.partner.company}
                 </Text>
               </View>
             </View>
@@ -492,38 +492,38 @@ const CampaignDetailsScreen: React.FC = () => {
                 <View style={[styles.featureIcon, { backgroundColor: theme.colors.successLight }]}>
                   <CheckCircle size={16} color={theme.colors.success} />
                 </View>
-                <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>Campaign timeline & status</Text>
+                <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>{t.campaignTimelineStatus}</Text>
               </View>
               <View style={styles.summaryFeature}>
                 <View style={[styles.featureIcon, { backgroundColor: theme.colors.blueLight }]}>
                   <Building2 size={16} color={theme.colors.blue} />
                 </View>
-                <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>Partner information</Text>
+                <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>{t.partnerInformation}</Text>
               </View>
               <View style={styles.summaryFeature}>
                 <View style={[styles.featureIcon, { backgroundColor: theme.colors.orangeLight }]}>
                   <ExternalLink size={16} color={theme.colors.orange} />
                 </View>
-                <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>Social media links</Text>
+                <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>{t.socialMediaLinks}</Text>
               </View>
             </View>
 
             {/* Action Buttons */}
             <View style={styles.summaryMainActions}>
-              <TouchableOpacity 
-                style={[styles.previewButton, { backgroundColor: theme.colors.borderLight }]} 
+              <TouchableOpacity
+                style={[styles.previewButton, { backgroundColor: theme.colors.borderLight }]}
                 onPress={handleGenerateSummary}
               >
                 <Eye size={18} color={theme.colors.textSecondary} />
-                <Text style={[styles.previewButtonText, { color: theme.colors.textSecondary }]}>Preview Report</Text>
+                <Text style={[styles.previewButtonText, { color: theme.colors.textSecondary }]}>{t.previewReport}</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.shareMainButton, { backgroundColor: theme.colors.primary }]} 
+
+              <TouchableOpacity
+                style={[styles.shareMainButton, { backgroundColor: theme.colors.primary }]}
                 onPress={handleShareSummary}
               >
                 <Send size={18} color="white" />
-                <Text style={styles.shareMainButtonText}>Share Report</Text>
+                <Text style={styles.shareMainButtonText}>{t.shareReport}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -824,7 +824,7 @@ function createStyles(theme: any) {
       fontSize: 14,
       fontFamily: 'Inter-SemiBold',
     },
-    
+
     // Vertical Timeline Styles
     timelineContainer: {
       borderRadius: 16,

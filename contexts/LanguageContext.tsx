@@ -278,6 +278,12 @@ export interface Translations {
   campaignUpdateClosing: string; // "Best"
   campaignUpdateSignature: string; // "{{userName}}"
   noPostsSharedYet: string; // "No posts have been shared yet."
+  generateCampaignReport: string; // "Generate Campaign Report"
+  createProfessionalSummary: string; // "Create a professional summary to share with"
+  campaignTimelineStatus: string; // "Campaign timeline & status"
+  partnerInformation: string; // "Partner information"
+  socialMediaLinks: string; // "Social media links"
+  previewReport: string; // "Preview Report"
 }
 
 const englishTranslations: Translations = {
@@ -555,6 +561,13 @@ const englishTranslations: Translations = {
   campaignUpdateClosing: 'Best',
   campaignUpdateSignature: '{{userName}}',
   noPostsSharedYet: 'No posts have been shared yet.',
+  generateCampaignReport: 'Generate Campaign Report',
+  createProfessionalSummary: 'Create a professional summary to share with',
+  campaignTimelineStatus: 'Campaign timeline & status',
+  partnerInformation: 'Partner information',
+  socialMediaLinks: 'Social media links',
+  previewReport: 'Preview Report',
+  shareReport: 'Share Report',
 };
 
 const polishTranslations: Translations = {
@@ -832,6 +845,13 @@ const polishTranslations: Translations = {
   campaignUpdateClosing: 'Pozdrawiam',
   campaignUpdateSignature: '{{userName}}',
   noPostsSharedYet: 'Nie udostępniono jeszcze żadnych postów.',
+  generateCampaignReport: 'Generuj raport kampanii',
+  createProfessionalSummary: 'Utwórz profesjonalne podsumowanie do udostępnienia z',
+  campaignTimelineStatus: 'Harmonogram i status kampanii',
+  partnerInformation: 'Informacje o partnerze',
+  socialMediaLinks: 'Linki do mediów społecznościowych',
+  previewReport: 'Podgląd raportu',
+  shareReport: 'Udostępnij raport',
 };
 
 const translations = {

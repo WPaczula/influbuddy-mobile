@@ -61,7 +61,7 @@ export default function PartnerDetailsScreen() {
     const completedCampaigns = campaigns.filter(c => c.partnerId === id && c.status === 'COMPLETED').length;
     const totalEarnings = campaigns
       .filter(c => c.partnerId === id && c.status === 'COMPLETED')
-      .reduce((sum, c) => sum + (c.amount || 0), 0);
+      .reduce((sum, c) => sum + (c.productValue || 0), 0);
 
     return { activeCampaigns, completedCampaigns, totalEarnings };
   };
