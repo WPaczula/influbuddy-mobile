@@ -7,16 +7,17 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import CampaignCard from '@/components/CampaignCard';
 import CalendarSkeleton from '@/components/CalendarSkeleton';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowLeft, Clock } from 'lucide-react-native';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowLeft, Clock, Filter, Check, X } from 'lucide-react-native';
 
 export default function CalendarScreen() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { partners, campaigns, loading } = useData();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
-  const [selectedPartner, setSelectedPartner] = useState<string | null>(null);
+  const [selectedPartners, setSelectedPartners] = useState<string[]>([]);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [showDayModal, setShowDayModal] = useState(false);
+  const [showPartnerFilter, setShowPartnerFilter] = useState(false);
   const router = useRouter();
 
   const styles = createStyles(theme);
@@ -42,7 +43,7 @@ export default function CalendarScreen() {
       const isInMonth = deadline.getMonth() === selectedMonth.getMonth() && 
                        deadline.getFullYear() === selectedMonth.getFullYear();
       
-      const matchesPartner = selectedPartner === null || campaign.partnerId === selectedPartner;
+      const matchesPartner = selectedPartners.length === 0 || selectedPartners.includes(campaign.partnerId);
       
       return isInMonth && matchesPartner;
     }).sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
@@ -132,6 +133,35 @@ export default function CalendarScreen() {
     setSelectedDay(null);
   };
 
+  const togglePartnerSelection = (partnerId: string) => {
+    setSelectedPartners(prev => {
+      if (prev.includes(partnerId)) {
+        return prev.filter(id => id !== partnerId);
+      } else {
+        return [...prev, partnerId];
+      }
+    });
+  };
+
+  const clearAllPartners = () => {
+    setSelectedPartners([]);
+  };
+
+  const selectAllPartners = () => {
+    setSelectedPartners(partners.map(p => p.id));
+  };
+
+  const getFilterButtonText = () => {
+    if (selectedPartners.length === 0) {
+      return t.allPartners;
+    } else if (selectedPartners.length === 1) {
+      const partner = partners.find(p => p.id === selectedPartners[0]);
+      return partner?.company || t.allPartners;
+    } else {
+      return `${selectedPartners.length} selected`;
+    }
+  };
+
   const weeks = getWeeksInMonth();
   const selectedDayCampaigns = getSelectedDayCampaigns();
 
@@ -159,48 +189,29 @@ export default function CalendarScreen() {
 
       {partners.length > 0 && (
         <View style={[styles.partnerFilter, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
-            contentContainerStyle={styles.partnerScrollContent}
+          <TouchableOpacity
+            style={[styles.filterButton, { backgroundColor: theme.colors.borderLight, borderColor: theme.colors.border }]}
+            onPress={() => setShowPartnerFilter(true)}
           >
+            <Filter size={16} color={theme.colors.textSecondary} />
+            <Text style={[styles.filterButtonText, { color: theme.colors.text }]} numberOfLines={1}>
+              {getFilterButtonText()}
+            </Text>
+            {selectedPartners.length > 0 && (
+              <View style={[styles.filterBadge, { backgroundColor: theme.colors.primary }]}>
+                <Text style={styles.filterBadgeText}>{selectedPartners.length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          
+          {selectedPartners.length > 0 && (
             <TouchableOpacity
-              style={[
-                styles.partnerChip,
-                { backgroundColor: theme.colors.borderLight },
-                selectedPartner === null && { backgroundColor: theme.colors.primary }
-              ]}
-              onPress={() => setSelectedPartner(null)}
+              style={[styles.clearButton, { backgroundColor: theme.colors.errorLight }]}
+              onPress={clearAllPartners}
             >
-              <Text style={[
-                styles.partnerChipText,
-                { color: theme.colors.textSecondary },
-                selectedPartner === null && { color: 'white' }
-              ]} numberOfLines={1}>
-                {t.allPartners}
-              </Text>
+              <X size={16} color={theme.colors.error} />
             </TouchableOpacity>
-            
-            {partners.map(partner => (
-              <TouchableOpacity
-                key={partner.id}
-                style={[
-                  styles.partnerChip,
-                  { backgroundColor: theme.colors.borderLight },
-                  selectedPartner === partner.id && { backgroundColor: theme.colors.primary }
-                ]}
-                onPress={() => setSelectedPartner(partner.id)}
-              >
-                <Text style={[
-                  styles.partnerChipText,
-                  { color: theme.colors.textSecondary },
-                  selectedPartner === partner.id && { color: 'white' }
-                ]} numberOfLines={1}>
-                  {partner.company}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          )}
         </View>
       )}
 
@@ -283,8 +294,8 @@ export default function CalendarScreen() {
               <CalendarIcon size={48} color={theme.colors.border} />
               <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>{t.noCampaignsThisMonth}</Text>
               <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                {selectedPartner 
-                  ? 'Brak kampanii od tego partnera w wybranym miesiącu'
+                {selectedPartners.length > 0
+                  ? 'Brak kampanii od wybranych partnerów w tym miesiącu'
                   : t.scheduleCampaigns
                 }
               </Text>
@@ -292,6 +303,99 @@ export default function CalendarScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Partner Filter Modal */}
+      <Modal
+        visible={showPartnerFilter}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+            <TouchableOpacity
+              style={[styles.modalBackButton, { backgroundColor: theme.colors.borderLight }]}
+              onPress={() => setShowPartnerFilter(false)}
+            >
+              <X size={24} color={theme.colors.textSecondary} />
+            </TouchableOpacity>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Filter Partners</Text>
+            <View style={styles.modalBackButton} />
+          </View>
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.colors.borderLight }]}
+              onPress={clearAllPartners}
+            >
+              <Text style={[styles.actionButtonText, { color: theme.colors.textSecondary }]}>Clear All</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.colors.primary }]}
+              onPress={selectAllPartners}
+            >
+              <Text style={[styles.actionButtonText, { color: 'white' }]}>Select All</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.partnersList}>
+            {partners.map(partner => {
+              const isSelected = selectedPartners.includes(partner.id);
+              const campaignCount = campaigns.filter(c => 
+                c.partnerId === partner.id && 
+                new Date(c.deadline).getMonth() === selectedMonth.getMonth() &&
+                new Date(c.deadline).getFullYear() === selectedMonth.getFullYear()
+              ).length;
+
+              return (
+                <TouchableOpacity
+                  key={partner.id}
+                  style={[
+                    styles.partnerOption,
+                    { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.borderLight },
+                    isSelected && { backgroundColor: theme.colors.primaryLight }
+                  ]}
+                  onPress={() => togglePartnerSelection(partner.id)}
+                >
+                  <View style={styles.partnerInfo}>
+                    <View style={[styles.partnerAvatar, { backgroundColor: theme.colors.primary }]}>
+                      <Text style={styles.partnerAvatarText}>
+                        {partner.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={styles.partnerDetails}>
+                      <Text style={[styles.partnerName, { color: theme.colors.text }]}>{partner.name}</Text>
+                      <Text style={[styles.partnerCompany, { color: theme.colors.textSecondary }]}>{partner.company}</Text>
+                      {campaignCount > 0 && (
+                        <Text style={[styles.campaignCount, { color: theme.colors.primary }]}>
+                          {campaignCount} campaign{campaignCount !== 1 ? 's' : ''} this month
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <View style={[
+                    styles.checkbox,
+                    { borderColor: theme.colors.border },
+                    isSelected && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
+                  ]}>
+                    {isSelected && <Check size={16} color="white" />}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          <View style={[styles.modalFooter, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border }]}>
+            <TouchableOpacity
+              style={[styles.applyButton, { backgroundColor: theme.colors.primary }]}
+              onPress={() => setShowPartnerFilter(false)}
+            >
+              <Text style={styles.applyButtonText}>
+                Apply Filter ({selectedPartners.length} selected)
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
 
       {/* Day Detail Modal */}
       <Modal
@@ -377,26 +481,44 @@ function createStyles(theme: any) {
       fontFamily: 'Inter-SemiBold',
     },
     partnerFilter: {
-      paddingVertical: 10,
-      borderBottomWidth: 1,
-    },
-    partnerScrollContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      gap: 12,
     },
-    partnerChip: {
-      borderRadius: 16,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      marginRight: 8,
-      minHeight: 28,
+    filterButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      gap: 8,
+    },
+    filterButtonText: {
+      flex: 1,
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+    },
+    filterBadge: {
+      minWidth: 20,
+      height: 20,
+      borderRadius: 10,
       justifyContent: 'center',
       alignItems: 'center',
+      paddingHorizontal: 6,
     },
-    partnerChipText: {
-      fontSize: 13,
-      fontFamily: 'Inter-SemiBold',
-      lineHeight: 16,
-      textAlign: 'center',
+    filterBadgeText: {
+      fontSize: 12,
+      fontFamily: 'Inter-Bold',
+      color: 'white',
+    },
+    clearButton: {
+      padding: 8,
+      borderRadius: 8,
     },
     scrollContent: {
       padding: 20,
@@ -528,6 +650,90 @@ function createStyles(theme: any) {
     },
     modalContent: {
       flex: 1,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      gap: 12,
+    },
+    actionButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    actionButtonText: {
+      fontSize: 14,
+      fontFamily: 'Inter-SemiBold',
+    },
+    partnersList: {
+      flex: 1,
+    },
+    partnerOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+    },
+    partnerInfo: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    partnerAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    partnerAvatarText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Bold',
+      color: 'white',
+    },
+    partnerDetails: {
+      flex: 1,
+    },
+    partnerName: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      marginBottom: 2,
+    },
+    partnerCompany: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      marginBottom: 2,
+    },
+    campaignCount: {
+      fontSize: 12,
+      fontFamily: 'Inter-Medium',
+    },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 4,
+      borderWidth: 2,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalFooter: {
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderTopWidth: 1,
+    },
+    applyButton: {
+      paddingVertical: 16,
+      borderRadius: 12,
+      alignItems: 'center',
+    },
+    applyButtonText: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      color: 'white',
     },
     modalStats: {
       marginHorizontal: 20,
