@@ -22,9 +22,7 @@ export default function EditPartnerScreen() {
   const { t } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { partners, updatePartner } = useData();
-  
-  const partner = partners.find(p => p.id === id);
+  const { partners, updatePartner, loading } = useData();
   
   const [form, setForm] = useState<PartnerForm>({
     name: '',
@@ -37,8 +35,17 @@ export default function EditPartnerScreen() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [partner, setPartner] = useState<Partner | null>(null);
 
   const styles = createStyles(theme);
+
+  // Find partner when data loads or changes
+  useEffect(() => {
+    if (!loading && partners.length > 0 && id) {
+      const foundPartner = partners.find(p => p.id === id);
+      setPartner(foundPartner || null);
+    }
+  }, [partners, loading, id]);
 
   // Populate form when partner data is available
   useEffect(() => {
@@ -55,9 +62,35 @@ export default function EditPartnerScreen() {
     }
   }, [partner, isLoaded]);
 
-  if (!partner) {
+  // Show loading state while data is loading
+  if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+          <TouchableOpacity style={[styles.headerButton, { backgroundColor: theme.colors.borderLight }]} onPress={() => router.back()}>
+            <ArrowLeft size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>{t.editPartner}</Text>
+          <View style={styles.headerButton} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>{t.loading}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error if partner not found after loading
+  if (!loading && !partner) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+          <TouchableOpacity style={[styles.headerButton, { backgroundColor: theme.colors.borderLight }]} onPress={() => router.back()}>
+            <ArrowLeft size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>{t.editPartner}</Text>
+          <View style={styles.headerButton} />
+        </View>
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, { color: theme.colors.error }]}>Partner not found</Text>
           <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.colors.primary }]} onPress={() => router.back()}>
@@ -72,6 +105,13 @@ export default function EditPartnerScreen() {
   if (!isLoaded) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+          <TouchableOpacity style={[styles.headerButton, { backgroundColor: theme.colors.borderLight }]} onPress={() => router.back()}>
+            <ArrowLeft size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>{t.editPartner}</Text>
+          <View style={styles.headerButton} />
+        </View>
         <View style={styles.loadingContainer}>
           <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>{t.loading}</Text>
         </View>
@@ -110,7 +150,7 @@ export default function EditPartnerScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || !partner) return;
 
     setIsSubmitting(true);
     try {
@@ -149,7 +189,7 @@ export default function EditPartnerScreen() {
         <TouchableOpacity style={[styles.headerButton, { backgroundColor: theme.colors.borderLight }]} onPress={() => router.back()}>
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Edit Partner</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>{t.editPartner}</Text>
         <TouchableOpacity 
           style={[styles.headerButton, { backgroundColor: theme.colors.primary }]} 
           onPress={handleSubmit}
@@ -288,7 +328,7 @@ export default function EditPartnerScreen() {
             disabled={isSubmitting}
           >
             <Text style={styles.submitButtonText}>
-              {isSubmitting ? t.updating : 'Update Partner'}
+              {isSubmitting ? t.updating : t.updatePartner}
             </Text>
           </TouchableOpacity>
         </View>
