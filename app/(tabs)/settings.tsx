@@ -7,7 +7,7 @@ import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { useRouter } from 'expo-router';
 import { UserProfile } from '@/types';
-import { User, Bell, Shield, CircleHelp as HelpCircle, Star, LogOut, ChevronRight, Moon, Globe, Download, CreditCard as Edit, Save, X, Camera, Mail, Link as LinkIcon, Instagram, Youtube, Twitter, Check } from 'lucide-react-native';
+import { User, Bell, Shield, CircleHelp as HelpCircle, Star, LogOut, ChevronRight, Moon, Globe, Download, CreditCard as Edit, Save, X, Camera, Mail, Link as LinkIcon, Instagram, Youtube, Twitter, Check, Clock } from 'lucide-react-native';
 
 interface SettingItem {
   icon: React.ReactNode;
@@ -19,15 +19,24 @@ interface SettingItem {
   onToggle?: (value: boolean) => void;
 }
 
+interface NotificationSettings {
+  enabled: boolean;
+  timing: 'hour' | 'day' | 'week';
+}
+
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const { user, signOut, updateUserProfile } = useAuth();
   const { getDashboardStats } = useData();
   const router = useRouter();
-  const [notifications, setNotifications] = useState(true);
+  const [notifications, setNotifications] = useState<NotificationSettings>({
+    enabled: true,
+    timing: 'day'
+  });
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
   const [isUpdating, setIsUpdating] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -165,6 +174,34 @@ export default function SettingsScreen() {
     return lang === 'en' ? 'English' : 'Polski';
   };
 
+  const getNotificationTimingLabel = (timing: 'hour' | 'day' | 'week') => {
+    switch (timing) {
+      case 'hour':
+        return 'Hour before deadline';
+      case 'day':
+        return 'Day before deadline';
+      case 'week':
+        return 'Week before deadline';
+    }
+  };
+
+  const handleNotificationToggle = (enabled: boolean) => {
+    if (enabled) {
+      // If enabling notifications, show timing selection
+      setShowNotificationModal(true);
+    } else {
+      // If disabling, just turn off
+      setNotifications(prev => ({ ...prev, enabled: false }));
+    }
+  };
+
+  const handleNotificationTimingSelect = (timing: 'hour' | 'day' | 'week') => {
+    setNotifications({ enabled: true, timing });
+    setShowNotificationModal(false);
+    // Here you would typically save to backend
+    console.log('Notification settings updated:', { enabled: true, timing });
+  };
+
   const settingsData: SettingItem[] = [
     {
       icon: <User size={20} color={theme.colors.textSecondary} />,
@@ -176,10 +213,12 @@ export default function SettingsScreen() {
     {
       icon: <Bell size={20} color={theme.colors.textSecondary} />,
       title: t.notifications,
-      subtitle: t.campaignDeadlinesUpdates,
+      subtitle: notifications.enabled 
+        ? `${t.campaignDeadlinesUpdates} • ${getNotificationTimingLabel(notifications.timing)}`
+        : t.campaignDeadlinesUpdates,
       type: 'toggle',
-      value: notifications,
-      onToggle: setNotifications,
+      value: notifications.enabled,
+      onToggle: handleNotificationToggle,
     },
     {
       icon: <Moon size={20} color={theme.colors.textSecondary} />,
@@ -337,6 +376,87 @@ export default function SettingsScreen() {
           <Text style={[styles.footerText, { color: theme.colors.textTertiary }]}>{t.madeWithLove}</Text>
         </View>
       </ScrollView>
+
+      {/* Notification Timing Modal */}
+      <Modal
+        visible={showNotificationModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+            <TouchableOpacity
+              style={[styles.modalButton, { backgroundColor: theme.colors.borderLight }]}
+              onPress={() => setShowNotificationModal(false)}
+            >
+              <X size={24} color={theme.colors.textSecondary} />
+            </TouchableOpacity>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Notification Timing</Text>
+            <View style={styles.modalButton} />
+          </View>
+
+          <View style={styles.notificationContent}>
+            <View style={[styles.notificationHeader, { backgroundColor: theme.colors.surface }]}>
+              <View style={[styles.notificationIcon, { backgroundColor: theme.colors.primaryLight }]}>
+                <Bell size={24} color={theme.colors.primary} />
+              </View>
+              <Text style={[styles.notificationTitle, { color: theme.colors.text }]}>
+                When would you like to be reminded?
+              </Text>
+              <Text style={[styles.notificationSubtitle, { color: theme.colors.textSecondary }]}>
+                Choose when to receive deadline notifications for your campaigns
+              </Text>
+            </View>
+
+            <View style={styles.timingOptions}>
+              {[
+                { key: 'hour', label: 'Hour before deadline', description: 'Get notified 1 hour before the deadline' },
+                { key: 'day', label: 'Day before deadline', description: 'Get notified 1 day before the deadline' },
+                { key: 'week', label: 'Week before deadline', description: 'Get notified 1 week before the deadline' }
+              ].map((option) => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={[
+                    styles.timingOption,
+                    { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                    notifications.timing === option.key && { borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryLight }
+                  ]}
+                  onPress={() => handleNotificationTimingSelect(option.key as 'hour' | 'day' | 'week')}
+                >
+                  <View style={styles.timingOptionContent}>
+                    <View style={styles.timingOptionHeader}>
+                      <Clock size={20} color={notifications.timing === option.key ? theme.colors.primary : theme.colors.textSecondary} />
+                      <Text style={[
+                        styles.timingOptionLabel,
+                        { color: theme.colors.text },
+                        notifications.timing === option.key && { color: theme.colors.primary, fontFamily: 'Inter-SemiBold' }
+                      ]}>
+                        {option.label}
+                      </Text>
+                    </View>
+                    <Text style={[
+                      styles.timingOptionDescription,
+                      { color: theme.colors.textSecondary },
+                      notifications.timing === option.key && { color: theme.colors.primary }
+                    ]}>
+                      {option.description}
+                    </Text>
+                  </View>
+                  <View style={[
+                    styles.radioButton,
+                    { borderColor: theme.colors.border },
+                    notifications.timing === option.key && { borderColor: theme.colors.primary, backgroundColor: theme.colors.primary }
+                  ]}>
+                    {notifications.timing === option.key && (
+                      <View style={[styles.radioButtonInner, { backgroundColor: 'white' }]} />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
 
       {/* Language Selection Modal */}
       <Modal
@@ -787,6 +907,78 @@ function createStyles(theme: any) {
     },
     modalScrollContent: {
       padding: 20,
+    },
+    // Notification timing modal styles
+    notificationContent: {
+      flex: 1,
+      padding: 20,
+    },
+    notificationHeader: {
+      alignItems: 'center',
+      padding: 24,
+      borderRadius: 16,
+      marginBottom: 24,
+    },
+    notificationIcon: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    notificationTitle: {
+      fontSize: 20,
+      fontFamily: 'Inter-Bold',
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    notificationSubtitle: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      textAlign: 'center',
+      lineHeight: 20,
+    },
+    timingOptions: {
+      gap: 12,
+    },
+    timingOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 20,
+      borderRadius: 16,
+      borderWidth: 2,
+    },
+    timingOptionContent: {
+      flex: 1,
+    },
+    timingOptionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 4,
+    },
+    timingOptionLabel: {
+      fontSize: 16,
+      fontFamily: 'Inter-Medium',
+    },
+    timingOptionDescription: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      lineHeight: 20,
+    },
+    radioButton: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    radioButtonInner: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
     },
     languageOptions: {
       flex: 1,
