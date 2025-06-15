@@ -4,8 +4,8 @@ import { Platform } from 'react-native';
 
 // Use different base URLs based on platform
 const API_URL = Platform.select({
-  ios: 'http://localhost:3000/api/v1',
-  android: 'http://10.0.2.2:3000/api/v1',
+  ios: 'https://888b-193-25-251-171.ngrok-free.app/api/v1',
+  android: 'https://888b-193-25-251-171.ngrok-free.app/api/v1',
   default: 'https://888b-193-25-251-171.ngrok-free.app/api/v1',
 });
 
