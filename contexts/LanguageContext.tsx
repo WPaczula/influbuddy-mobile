@@ -45,6 +45,8 @@ export interface Translations {
 
   // Campaigns
   campaignDetails: string;
+  editCampaign: string;
+  updateCampaign: string;
   newCampaign: string;
   campaignTitle: string;
   campaignDescription: string;
@@ -52,6 +54,7 @@ export interface Translations {
   startDate: string;
   deadline: string;
   requirements: string;
+  requirementPlaceholder: string;
   socialMediaPosts: string;
   addPost: string;
   noCampaignsYet: string;
@@ -317,6 +320,8 @@ const englishTranslations: Translations = {
 
   // Campaigns
   campaignDetails: 'Campaign Details',
+  editCampaign: 'Edit Campaign',
+  updateCampaign: 'Update Campaign',
   newCampaign: 'New Campaign',
   campaignTitle: 'Campaign Title',
   campaignDescription: 'Description',
@@ -324,6 +329,7 @@ const englishTranslations: Translations = {
   startDate: 'Start Date',
   deadline: 'Deadline',
   requirements: 'Requirements',
+  requirementPlaceholder: 'Requirement',
   socialMediaPosts: 'Social Media Posts',
   addPost: 'Add Post',
   noCampaignsYet: 'No campaigns yet',
@@ -589,6 +595,8 @@ const polishTranslations: Translations = {
 
   // Campaigns
   campaignDetails: 'Szczegóły kampanii',
+  editCampaign: 'Edytuj kampanię',
+  updateCampaign: 'Aktualizuj kampanię',
   newCampaign: 'Nowa kampania',
   campaignTitle: 'Tytuł kampanii',
   campaignDescription: 'Opis',
@@ -596,6 +604,7 @@ const polishTranslations: Translations = {
   startDate: 'Data rozpoczęcia',
   deadline: 'Termin',
   requirements: 'Wymagania',
+  requirementPlaceholder: 'Wymaganie',
   socialMediaPosts: 'Posty w mediach społecznościowych',
   addPost: 'Dodaj post',
   noCampaignsYet: 'Brak kampanii',

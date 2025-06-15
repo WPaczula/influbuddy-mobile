@@ -21,7 +21,7 @@ interface CampaignForm {
 
 export default function EditCampaignScreen() {
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { partners, campaigns, updateCampaign } = useData();
@@ -89,7 +89,8 @@ export default function EditCampaignScreen() {
   const selectedPartner = partners.find(p => p.id === form.partnerId);
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
+    const locale = language === 'pl' ? 'pl-PL' : 'en-US';
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -141,11 +142,11 @@ export default function EditCampaignScreen() {
       
       Alert.alert(
         t.success,
-        'Campaign updated successfully!',
+        t.campaignUpdated,
         [{ text: 'OK', onPress: () => router.back() }]
       );
     } catch (error) {
-      Alert.alert(t.error, 'Failed to update campaign. Please try again.');
+      Alert.alert(t.error, t.updateCampaignError);
     } finally {
       setIsSubmitting(false);
     }
@@ -209,7 +210,7 @@ export default function EditCampaignScreen() {
         <TouchableOpacity style={[styles.headerButton, { backgroundColor: theme.colors.borderLight }]} onPress={() => router.back()}>
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Edit Campaign</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>{t.editCampaign}</Text>
         <TouchableOpacity 
           style={[styles.headerButton, { backgroundColor: theme.colors.primary }]} 
           onPress={handleSubmit}
@@ -373,7 +374,7 @@ export default function EditCampaignScreen() {
                 style={[styles.input, styles.requirementInput, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text }]}
                 value={requirement}
                 onChangeText={(text) => updateRequirement(index, text)}
-                placeholder={`Requirement ${index + 1}`}
+                placeholder={`${t.requirementPlaceholder} ${index + 1}`}
                 placeholderTextColor={theme.colors.textTertiary}
               />
               {form.requirements.length > 1 && (
@@ -398,7 +399,7 @@ export default function EditCampaignScreen() {
             disabled={isSubmitting}
           >
             <Text style={styles.submitButtonText}>
-              {isSubmitting ? t.updating : 'Update Campaign'}
+              {isSubmitting ? t.updating : t.updateCampaign}
             </Text>
           </TouchableOpacity>
         </View>
