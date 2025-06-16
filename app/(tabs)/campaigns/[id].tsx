@@ -478,43 +478,87 @@ const CampaignDetailsScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Social Media Posts */}
+        {/* Social Media Posts - Enhanced Section */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.socialMediaPosts}</Text>
-            <TouchableOpacity style={[styles.addButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.primary }]} onPress={handleAddPost}>
-              <Plus size={16} color={theme.colors.primary} />
-              <Text style={[styles.addButtonText, { color: theme.colors.primary }]}>{t.addPost}</Text>
+          <View style={styles.socialMediaHeader}>
+            <View style={styles.socialMediaTitleSection}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.socialMediaPosts}</Text>
+              <Text style={[styles.sectionSubtitle, { color: theme.colors.textSecondary }]}>
+                {campaign.socialLinks && campaign.socialLinks.length > 0
+                  ? `${campaign.socialLinks.length} post${campaign.socialLinks.length !== 1 ? 's' : ''} shared`
+                  : 'No posts shared yet'
+                }
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.addPostButton, { backgroundColor: theme.colors.primary }]}
+              onPress={handleAddPost}
+            >
+              <Plus size={18} color="white" />
+              <Text style={styles.addPostButtonText}>{t.addPost}</Text>
             </TouchableOpacity>
           </View>
 
           {campaign.socialLinks && campaign.socialLinks.length > 0 ? (
-            campaign.socialLinks.map((link: SocialLink) => (
-              <TouchableOpacity
-                key={link.id}
-                style={[styles.socialCard, { backgroundColor: theme.colors.surface }]}
-                onPress={() => openLink(link.url)}
-              >
-                <View style={styles.socialHeader}>
-                  <View style={styles.socialInfo}>
-                    <Text style={[styles.socialPlatform, { color: theme.colors.text }]}>
-                      {getPlatformIcon(link.platform)} {getPlatformName(link.platform)}
-                    </Text>
-                    <Text style={[styles.socialType, { color: theme.colors.textSecondary }]}>{getPostTypeLabel(link.postType)}</Text>
+            <View style={styles.socialPostsList}>
+              {campaign.socialLinks.map((link, index) => (
+                <TouchableOpacity
+                  key={link.id}
+                  style={[styles.socialPostCard, { backgroundColor: theme.colors.surface }]}
+                  onPress={() => openLink(link.url)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.socialPostHeader}>
+                    <View style={styles.socialPostInfo}>
+                      <View style={styles.socialPostPlatform}>
+                        {getPlatformIcon(link.platform)}
+                        <Text style={[styles.socialPlatformText, { color: theme.colors.text }]}>
+                          {getPlatformName(link.platform)}
+                        </Text>
+                      </View>
+                      <View style={[styles.socialPostTypeBadge, { backgroundColor: theme.colors.borderLight }]}>
+                        <Text style={[styles.socialPostTypeText, { color: theme.colors.textSecondary }]}>
+                          {getPostTypeLabel(link.postType)}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={[styles.socialPostAction, { backgroundColor: theme.colors.borderLight }]}>
+                      <ExternalLink size={16} color={theme.colors.textSecondary} />
+                    </View>
                   </View>
-                  <ExternalLink size={16} color={theme.colors.textSecondary} />
-                </View>
 
-                {link.description && (
-                  <Text style={[styles.socialDescription, { color: theme.colors.textSecondary }]}>{link.description}</Text>
-                )}
-              </TouchableOpacity>
-            ))
+                  {link.description && (
+                    <View style={styles.socialPostDescription}>
+                      <Text style={[styles.socialDescriptionText, { color: theme.colors.textSecondary }]} numberOfLines={2}>
+                        {link.description}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.socialPostFooter}>
+                    <Text style={[styles.socialPostUrl, { color: theme.colors.primary }]} numberOfLines={1}>
+                      {link.url}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
           ) : (
-            <View style={[styles.emptyState, { backgroundColor: theme.colors.surface, borderColor: theme.colors.borderLight }]}>
-              <ExternalLink size={48} color={theme.colors.border} />
-              <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>{t.noPostsYet}</Text>
-              <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>{t.addSocialLinks}</Text>
+            <View style={[styles.socialEmptyState, { backgroundColor: theme.colors.surface, borderColor: theme.colors.borderLight }]}>
+              <View style={[styles.socialEmptyIcon, { backgroundColor: theme.colors.borderLight }]}>
+                <ExternalLink size={32} color={theme.colors.border} />
+              </View>
+              <Text style={[styles.socialEmptyTitle, { color: theme.colors.text }]}>{t.noPostsYet}</Text>
+              <Text style={[styles.socialEmptyText, { color: theme.colors.textSecondary }]}>
+                {t.addSocialLinks}
+              </Text>
+              <TouchableOpacity
+                style={[styles.socialEmptyButton, { backgroundColor: theme.colors.primary }]}
+                onPress={handleAddPost}
+              >
+                <Plus size={16} color="white" />
+                <Text style={styles.socialEmptyButtonText}>Add First Post</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -880,24 +924,10 @@ function createStyles(theme: any) {
       fontFamily: 'Inter-SemiBold',
       marginBottom: 16,
     },
-    sectionHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    addButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderWidth: 1,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 8,
-      gap: 6,
-    },
-    addButtonText: {
+    sectionSubtitle: {
       fontSize: 14,
-      fontFamily: 'Inter-SemiBold',
+      fontFamily: 'Inter-Regular',
+      marginTop: 2,
     },
 
     // Vertical Timeline Styles
@@ -969,53 +999,135 @@ function createStyles(theme: any) {
       marginTop: 2,
     },
 
-    socialCard: {
+    // Enhanced Social Media Posts Styles
+    socialMediaHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 20,
+    },
+    socialMediaTitleSection: {
+      flex: 1,
+    },
+    addPostButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 12,
+      gap: 8,
+    },
+    addPostButtonText: {
+      fontSize: 14,
+      fontFamily: 'Inter-SemiBold',
+      color: 'white',
+    },
+    socialPostsList: {
+      gap: 12,
+    },
+    socialPostCard: {
       borderRadius: 16,
       padding: 16,
-      marginBottom: 12,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 3,
     },
-    socialHeader: {
+    socialPostHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 8,
-    },
-    socialInfo: {
-      flex: 1,
-    },
-    socialPlatform: {
-      fontSize: 16,
-      fontFamily: 'Inter-SemiBold',
-      marginBottom: 2,
-    },
-    socialType: {
-      fontSize: 14,
-      fontFamily: 'Inter-Regular',
-      textTransform: 'capitalize',
-    },
-    socialDescription: {
-      fontSize: 14,
-      fontFamily: 'Inter-Regular',
       marginBottom: 12,
     },
-    emptyState: {
-      borderRadius: 16,
-      padding: 40,
+    socialPostInfo: {
+      flex: 1,
+      flexDirection: 'row',
       alignItems: 'center',
-      borderWidth: 1,
+      gap: 12,
+    },
+    socialPostPlatform: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    socialPlatformText: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+    },
+    socialPostTypeBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    socialPostTypeText: {
+      fontSize: 12,
+      fontFamily: 'Inter-Medium',
+      textTransform: 'capitalize',
+    },
+    socialPostAction: {
+      padding: 8,
+      borderRadius: 8,
+    },
+    socialPostDescription: {
+      marginBottom: 12,
+    },
+    socialDescriptionText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      lineHeight: 20,
+    },
+    socialPostFooter: {
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(0,0,0,0.05)',
+      paddingTop: 12,
+    },
+    socialPostUrl: {
+      fontSize: 13,
+      fontFamily: 'Inter-Medium',
+    },
+    socialEmptyState: {
+      borderRadius: 16,
+      padding: 32,
+      alignItems: 'center',
+      borderWidth: 2,
       borderStyle: 'dashed',
     },
-    emptyTitle: {
+    socialEmptyIcon: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    socialEmptyTitle: {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
-      marginTop: 16,
       marginBottom: 8,
     },
-    emptyText: {
+    socialEmptyText: {
       fontSize: 14,
       fontFamily: 'Inter-Regular',
       textAlign: 'center',
+      marginBottom: 20,
       maxWidth: 240,
+    },
+    socialEmptyButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderRadius: 12,
+      gap: 8,
+    },
+    socialEmptyButtonText: {
+      fontSize: 14,
+      fontFamily: 'Inter-SemiBold',
+      color: 'white',
     },
 
     // Enhanced Summary Section Styles
@@ -1113,23 +1225,6 @@ function createStyles(theme: any) {
       fontSize: 15,
       fontFamily: 'Inter-SemiBold',
       color: 'white',
-    },
-    quickActions: {
-      flexDirection: 'row',
-      gap: 12,
-    },
-    quickAction: {
-      flex: 1,
-      alignItems: 'center',
-      paddingVertical: 16,
-      paddingHorizontal: 12,
-      borderRadius: 12,
-      gap: 8,
-    },
-    quickActionText: {
-      fontSize: 12,
-      fontFamily: 'Inter-SemiBold',
-      textAlign: 'center',
     },
 
     actionButton: {
