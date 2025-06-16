@@ -13,8 +13,8 @@ export default function LoginScreen() {
   const { t } = useLanguage();
   const { signIn } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('wojciech.paczula@gmail.com');
+  const [password, setPassword] = useState('zaq1@WSX');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 

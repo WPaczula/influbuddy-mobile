@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { Partner } from '@/types';
 import { ArrowLeft, Calendar, DollarSign, Plus, X, ChevronDown, Building2, Check, Save } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useUpdateCampaign } from '@/hooks/queries/useCampaigns';
 
 interface CampaignForm {
   title: string;
@@ -24,10 +25,11 @@ export default function EditCampaignScreen() {
   const { t, language } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { partners, campaigns, updateCampaign } = useData();
-  
+  const { partners, campaigns } = useData();
+  const updateCampaignMutation = useUpdateCampaign();
+
   const campaign = campaigns.find(c => c.id === id);
-  
+
   const [form, setForm] = useState<CampaignForm>({
     title: '',
     description: '',
@@ -37,7 +39,7 @@ export default function EditCampaignScreen() {
     deadline: new Date(),
     requirements: [''],
   });
-  
+
   const [showPartnerPicker, setShowPartnerPicker] = useState(false);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showDeadlinePicker, setShowDeadlinePicker] = useState(false);
@@ -53,7 +55,7 @@ export default function EditCampaignScreen() {
         title: campaign.title || '',
         description: campaign.description || '',
         partnerId: campaign.partnerId || '',
-        amount: campaign.amount?.toString() || '',
+        amount: campaign.productValue?.toString() || '',
         startDate: campaign.startDate ? new Date(campaign.startDate) : new Date(),
         deadline: campaign.deadline ? new Date(campaign.deadline) : new Date(),
         requirements: campaign.requirements && campaign.requirements.length > 0 ? campaign.requirements : [''],
@@ -130,16 +132,18 @@ export default function EditCampaignScreen() {
 
     setIsSubmitting(true);
     try {
-      await updateCampaign(campaign.id, {
-        title: form.title.trim(),
-        description: form.description.trim(),
-        partnerId: form.partnerId,
-        amount: Number(form.amount.replace(/,/g, '')),
-        startDate: form.startDate.toISOString(),
-        deadline: form.deadline.toISOString(),
-        requirements: form.requirements.filter(req => req.trim()),
+      await updateCampaignMutation.mutateAsync({
+        id: campaign.id,
+        updates: {
+          title: form.title.trim(),
+          description: form.description.trim(),
+          partnerId: form.partnerId,
+          productValue: Number(form.amount.replace(/,/g, '')),
+          deadline: form.deadline.toISOString(),
+          requirements: form.requirements.filter(req => req.trim()),
+        }
       });
-      
+
       Alert.alert(
         t.success,
         t.campaignUpdated,
@@ -211,8 +215,8 @@ export default function EditCampaignScreen() {
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>{t.editCampaign}</Text>
-        <TouchableOpacity 
-          style={[styles.headerButton, { backgroundColor: theme.colors.primary }]} 
+        <TouchableOpacity
+          style={[styles.headerButton, { backgroundColor: theme.colors.primary }]}
           onPress={handleSubmit}
           disabled={isSubmitting}
         >
@@ -223,7 +227,7 @@ export default function EditCampaignScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Campaign Details</Text>
-          
+
           <View style={styles.inputGroup}>
             <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.campaignTitle} *</Text>
             <TextInput
@@ -291,7 +295,7 @@ export default function EditCampaignScreen() {
 
         <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.timeline}</Text>
-          
+
           {/* Start Date */}
           <View style={styles.inputGroup}>
             <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.startDate}</Text>
@@ -367,7 +371,7 @@ export default function EditCampaignScreen() {
               <Text style={[styles.addButtonText, { color: theme.colors.primary }]}>{t.addRequirement}</Text>
             </TouchableOpacity>
           </View>
-          
+
           {form.requirements.map((requirement, index) => (
             <View key={index} style={styles.requirementRow}>
               <TextInput
@@ -420,7 +424,7 @@ export default function EditCampaignScreen() {
               <X size={24} color={theme.colors.textSecondary} />
             </TouchableOpacity>
           </View>
-          
+
           <ScrollView style={styles.partnersList}>
             {partners.map(partner => (
               <TouchableOpacity

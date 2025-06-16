@@ -33,9 +33,9 @@ export const campaignsService = {
     }
   },
 
-  async update(id: string, updates: Partial<Campaign>): Promise<Campaign> {
+  async update(id: string, data: Partial<Campaign>): Promise<Campaign> {
     try {
-      const response = await api.patch<Campaign>(`/campaigns/${id}`, updates);
+      const response = await api.patch<Campaign>(`/campaigns/${id}`, data);
       return response.data;
     } catch (error) {
       console.error('Error updating campaign:', error);

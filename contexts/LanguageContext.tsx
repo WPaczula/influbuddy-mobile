@@ -63,6 +63,7 @@ export interface Translations {
   allCampaigns: string;
   draft: string;
   active: string;
+  waitingForPayment: string;
   completed: string;
   cancelled: string;
   dueToday: string;
@@ -72,6 +73,8 @@ export interface Translations {
   overdue: string;
   startCampaign: string;
   markComplete: string;
+  markAsPaid: string;
+  earnings: string;
   timeline: string;
   completedDate: string;
   campaignSummary: string;
@@ -346,6 +349,7 @@ const englishTranslations: Translations = {
   allCampaigns: 'All',
   draft: 'Draft',
   active: 'Active',
+  waitingForPayment: 'Waiting for Payment',
   completed: 'Completed',
   cancelled: 'Cancelled',
   dueToday: 'Due today!',
@@ -355,6 +359,8 @@ const englishTranslations: Translations = {
   overdue: 'Overdue',
   startCampaign: 'Start Campaign',
   markComplete: 'Mark Complete',
+  markAsPaid: 'Mark as Paid',
+  earnings: 'Earnings',
   timeline: 'Timeline',
   completedDate: 'Completed',
   campaignSummary: 'Campaign Summary',
@@ -629,6 +635,7 @@ const polishTranslations: Translations = {
   allCampaigns: 'Wszystkie',
   draft: 'Wersja robocza',
   active: 'Aktywna',
+  waitingForPayment: 'Oczekiwanie na płatność',
   completed: 'Zakończono',
   cancelled: 'Anulowana',
   dueToday: 'Termin dzisiaj!',
@@ -638,6 +645,8 @@ const polishTranslations: Translations = {
   overdue: 'Po terminie',
   startCampaign: 'Rozpocznij kampanię',
   markComplete: 'Oznacz jako ukończone',
+  markAsPaid: 'Oznacz jako opłacone',
+  earnings: 'Zarobki',
   timeline: 'Harmonogram',
   completedDate: 'Ukończono',
   campaignSummary: 'Podsumowanie kampanii',

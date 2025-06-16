@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import React, { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -18,7 +18,7 @@ export default function CampaignsScreen() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'DRAFT' | 'ACTIVE' | 'WAITING_FOR_PAYMENT' | 'COMPLETED' | 'CANCELLED'>('all');
   const router = useRouter();
 
   const styles = createStyles(theme);
@@ -59,6 +59,7 @@ export default function CampaignsScreen() {
     all: campaigns.length,
     DRAFT: campaigns.filter(c => c.status === 'DRAFT').length,
     ACTIVE: campaigns.filter(c => c.status === 'ACTIVE').length,
+    WAITING_FOR_PAYMENT: campaigns.filter(c => c.status === 'WAITING_FOR_PAYMENT').length,
     COMPLETED: campaigns.filter(c => c.status === 'COMPLETED').length,
     CANCELLED: campaigns.filter(c => c.status === 'CANCELLED').length,
   };
@@ -68,6 +69,7 @@ export default function CampaignsScreen() {
       all: t.allCampaigns,
       DRAFT: t.draft,
       ACTIVE: t.active,
+      WAITING_FOR_PAYMENT: t.waitingForPayment,
       COMPLETED: t.completed,
       CANCELLED: t.cancelled
     };
@@ -139,7 +141,7 @@ export default function CampaignsScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.filterScrollContent}
             >
-              {(['all', 'DRAFT', 'ACTIVE', 'COMPLETED', 'CANCELLED'] as const).map(status => (
+              {(['all', 'DRAFT', 'ACTIVE', 'WAITING_FOR_PAYMENT', 'COMPLETED', 'CANCELLED'] as const).map(status => (
                 <TouchableOpacity
                   key={status}
                   style={[

@@ -13,6 +13,7 @@ import CampaignDetailsSkeleton from '@/components/CampaignDetailsSkeleton';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useAddPost, campaignKeys } from '@/hooks/queries/useCampaigns';
+import { useUpdateCampaign } from '@/hooks/queries/useCampaigns';
 
 interface AddPostForm {
   url: string;
@@ -42,6 +43,7 @@ const CampaignDetailsScreen: React.FC = () => {
   });
 
   const addPostMutation = useAddPost();
+  const updateCampaignMutation = useUpdateCampaign();
 
   const styles = createStyles(theme);
 
@@ -111,16 +113,17 @@ const CampaignDetailsScreen: React.FC = () => {
     return null;
   };
 
-  const updateStatus = async (newStatus: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED') => {
+  const updateStatus = async (newStatus: 'DRAFT' | 'ACTIVE' | 'WAITING_FOR_PAYMENT' | 'COMPLETED' | 'CANCELLED') => {
     if (!campaign) {
       Alert.alert(t.error, t.loadingError);
       return;
     }
 
     try {
-      const updatedCampaign = await campaignsService.update(campaign.id, { status: newStatus });
-      // Assuming the updated campaign is returned from the update call
-      // You might want to update the local state with the new campaign data
+      await updateCampaignMutation.mutateAsync({
+        id: campaign.id,
+        updates: { status: newStatus }
+      });
     } catch (error) {
       console.error('Error updating campaign status:', error);
       Alert.alert(t.error, t.updateCampaignError);
@@ -182,8 +185,17 @@ const CampaignDetailsScreen: React.FC = () => {
         );
       case 'ACTIVE':
         return (
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: theme.colors.success }]} onPress={() => updateStatus('COMPLETED')}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: theme.colors.success }]}
+            onPress={() => updateStatus(campaign.productValue && campaign.productValue > 0 ? 'WAITING_FOR_PAYMENT' : 'COMPLETED')}
+          >
             <Text style={styles.actionButtonText}>{t.markComplete}</Text>
+          </TouchableOpacity>
+        );
+      case 'WAITING_FOR_PAYMENT':
+        return (
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: theme.colors.success }]} onPress={() => updateStatus('COMPLETED')}>
+            <Text style={styles.actionButtonText}>{t.markAsPaid}</Text>
           </TouchableOpacity>
         );
       case 'COMPLETED':
@@ -248,7 +260,6 @@ const CampaignDetailsScreen: React.FC = () => {
     }
 
     try {
-      debugger
       await addPostMutation.mutateAsync({
         campaignId: campaign.id,
         postUrl: postForm.url,
@@ -416,24 +427,6 @@ const CampaignDetailsScreen: React.FC = () => {
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.timeline}</Text>
           <View style={[styles.timelineContainer, { backgroundColor: theme.colors.surface }]}>
 
-            {/* Campaign Value */}
-            {campaign.productValue && (
-              <View style={styles.timelineStep}>
-                <View style={styles.timelineStepLeft}>
-                  <View style={[styles.timelineIcon, { backgroundColor: theme.colors.success }]}>
-                    <DollarSign size={16} color="white" />
-                  </View>
-                  <View style={[styles.timelineLine, { backgroundColor: theme.colors.border }]} />
-                </View>
-                <View style={styles.timelineStepRight}>
-                  <Text style={[styles.timelineStepTitle, { color: theme.colors.text }]}>{t.campaignValue}</Text>
-                  <Text style={[styles.timelineStepValue, { color: theme.colors.success }]}>
-                    {formatCurrency(campaign.productValue)}
-                  </Text>
-                </View>
-              </View>
-            )}
-
             {/* Start Date */}
             <View style={styles.timelineStep}>
               <View style={styles.timelineStepLeft}>
@@ -459,6 +452,7 @@ const CampaignDetailsScreen: React.FC = () => {
                 ]}>
                   <Calendar size={16} color="white" />
                 </View>
+                {campaign.productValue ? <View style={[styles.timelineLine, { backgroundColor: theme.colors.border }]} /> : null}
               </View>
               <View style={styles.timelineStepRight}>
                 <Text style={[styles.timelineStepTitle, { color: theme.colors.text }]}>{t.deadline}</Text>
@@ -475,6 +469,30 @@ const CampaignDetailsScreen: React.FC = () => {
                 )}
               </View>
             </View>
+
+            {/* Campaign Value */}
+            {campaign.productValue && (
+              <View style={styles.timelineStep}>
+                <View style={styles.timelineStepLeft}>
+                  <View style={[styles.timelineIcon, { backgroundColor: theme.colors.success }]}>
+                    <DollarSign size={16} color="white" />
+                  </View>
+                </View>
+                <View style={styles.timelineStepRight}>
+                  <Text style={[styles.timelineStepTitle, { color: theme.colors.text }]}>
+                    {campaign.status === 'COMPLETED' ? t.earnings : t.campaignValue}
+                  </Text>
+                  <Text style={[styles.timelineStepValue, { color: theme.colors.success }]}>
+                    {formatCurrency(campaign.productValue)}
+                  </Text>
+                  {campaign.status === 'WAITING_FOR_PAYMENT' && (
+                    <Text style={[styles.timelineStepSubtext, { color: theme.colors.warning }]}>
+                      {t.waitingForPayment}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            )}
           </View>
         </View>
 
@@ -1196,8 +1214,8 @@ function createStyles(theme: any) {
       flex: 1,
     },
     summaryMainActions: {
-      flexDirection: 'row',
-      gap: 12,
+      flexDirection: 'column',
+      gap: 8,
     },
     previewButton: {
       flex: 1,

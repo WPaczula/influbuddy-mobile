@@ -29,7 +29,7 @@ export interface Campaign {
   productValue: number | null;
   requirements: string[];
   deadline: string | null;
-  status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  status: 'DRAFT' | 'ACTIVE' | 'WAITING_FOR_PAYMENT' | 'COMPLETED' | 'CANCELLED';
   createdAt: string;
   updatedAt: string;
   partner: {

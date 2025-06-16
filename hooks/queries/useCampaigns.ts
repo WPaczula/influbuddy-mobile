@@ -17,7 +17,7 @@ export interface CreateCampaignInput {
   partnerId: string;
   productValue: number;
   deadline: Date;
-  status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  status: 'DRAFT' | 'ACTIVE' | 'WAITING_FOR_PAYMENT' | 'COMPLETED' | 'CANCELLED';
   requirements: string[];
 }
 

@@ -3,7 +3,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface StatusBadgeProps {
-  status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'WAITING_FOR_PAYMENT';
   size?: 'small' | 'medium';
   showLabel?: boolean;
 }
@@ -11,6 +11,7 @@ interface StatusBadgeProps {
 export default function StatusBadge({ status, size = 'medium', showLabel = false }: StatusBadgeProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  console.log(status);
 
   const getStatusConfig = () => {
     switch (status) {
@@ -31,6 +32,12 @@ export default function StatusBadge({ status, size = 'medium', showLabel = false
           backgroundColor: theme.colors.success,
           text: t.completed.toUpperCase(),
           label: t.completed,
+        };
+      case 'WAITING_FOR_PAYMENT':
+        return {
+          backgroundColor: theme.colors.blue,
+          text: t.waitingForPayment.toUpperCase(),
+          label: t.waitingForPayment,
         };
       case 'CANCELLED':
         return {
