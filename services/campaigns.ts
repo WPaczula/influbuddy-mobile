@@ -54,13 +54,13 @@ export const campaignsService = {
 
   async addPost(campaignId: string, postUrl: string, platform: string, postType: string, description?: string): Promise<Campaign> {
     try {
-      const response = await api.post<{ campaign: Campaign }>(`campaigns/${campaignId}/posts`, {
+      const response = await api.post<Campaign>(`campaigns/${campaignId}/posts`, {
         postUrl,
         platform,
         postType,
         description,
       });
-      return response.data.campaign;
+      return response.data;
     } catch (error) {
       console.error('Error adding post to campaign:', error);
       throw error;

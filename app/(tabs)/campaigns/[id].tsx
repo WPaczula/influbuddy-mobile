@@ -4,13 +4,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useState, useEffect } from 'react';
-import { Campaign } from '@/types';
+import { useState } from 'react';
+import { Campaign, SocialLink } from '@/types';
 import { ArrowLeft, Calendar, DollarSign, ExternalLink, Building2, CircleCheck as CheckCircle, Clock, CirclePlay as PlayCircle, Pencil, Trash2, Plus, Eye, Heart, MessageCircle, Share as ShareIcon, X, Link as LinkIcon, FileText, Send, Instagram, Youtube, Twitter, Globe } from 'lucide-react-native';
 import { campaignsService } from '@/services/campaigns';
 import StatusBadge from '@/components/StatusBadge';
 import CampaignDetailsSkeleton from '@/components/CampaignDetailsSkeleton';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { useAddPost, campaignKeys } from '@/hooks/queries/useCampaigns';
 
 interface AddPostForm {
   url: string;
@@ -25,8 +27,6 @@ const CampaignDetailsScreen: React.FC = () => {
   const { user } = useAuth();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showAddPost, setShowAddPost] = useState(false);
   const [postForm, setPostForm] = useState<AddPostForm>({
     url: '',
@@ -35,26 +35,15 @@ const CampaignDetailsScreen: React.FC = () => {
     platform: 'instagram',
   });
   const [showSummaryModal, setShowSummaryModal] = useState(false);
-  const [isSubmittingPost, setIsSubmittingPost] = useState(false);
+
+  const { data: campaign, isLoading } = useQuery({
+    queryKey: campaignKeys.detail(id),
+    queryFn: () => campaignsService.getDetails(id),
+  });
+
+  const addPostMutation = useAddPost();
 
   const styles = createStyles(theme);
-
-  useEffect(() => {
-    loadCampaign();
-  }, [id]);
-
-  const loadCampaign = async () => {
-    try {
-      setLoading(true);
-      const data = await campaignsService.getDetails(id);
-      setCampaign(data);
-    } catch (error) {
-      console.error('Error loading campaign:', error);
-      Alert.alert(t.error, t.loadingError);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatDate = (date: Date | string) => {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -130,7 +119,8 @@ const CampaignDetailsScreen: React.FC = () => {
 
     try {
       const updatedCampaign = await campaignsService.update(campaign.id, { status: newStatus });
-      setCampaign(updatedCampaign);
+      // Assuming the updated campaign is returned from the update call
+      // You might want to update the local state with the new campaign data
     } catch (error) {
       console.error('Error updating campaign status:', error);
       Alert.alert(t.error, t.updateCampaignError);
@@ -257,28 +247,27 @@ const CampaignDetailsScreen: React.FC = () => {
       return;
     }
 
-    setIsSubmittingPost(true);
     try {
-      const updatedCampaign = await campaignsService.addPost(
-        campaign.id,
-        postForm.url,
-        postForm.platform,
-        postForm.postType,
-        postForm.description
-      );
-      setCampaign(updatedCampaign);
-      setShowAddPost(false);
+      debugger
+      await addPostMutation.mutateAsync({
+        campaignId: campaign.id,
+        postUrl: postForm.url,
+        platform: postForm.platform,
+        postType: postForm.postType,
+        description: postForm.description,
+      });
+
+      // Reset form and close modal after successful mutation
       setPostForm({
         url: '',
         postType: 'post',
         description: '',
         platform: 'instagram',
       });
+      setShowAddPost(false);
     } catch (error) {
       console.error('Error adding post:', error);
       Alert.alert(t.error, t.updateCampaignError);
-    } finally {
-      setIsSubmittingPost(false);
     }
   };
 
@@ -295,7 +284,7 @@ const CampaignDetailsScreen: React.FC = () => {
 
     // Add social media links if available
     if (campaign.socialLinks && campaign.socialLinks.length > 0) {
-      campaign.socialLinks.forEach((link, index) => {
+      campaign.socialLinks.forEach((link: SocialLink, index: number) => {
         summary += `${index + 1}. ${link.url}\n`;
       });
       summary += '\n';
@@ -345,7 +334,7 @@ const CampaignDetailsScreen: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <CampaignDetailsSkeleton />;
   }
 
@@ -397,7 +386,7 @@ const CampaignDetailsScreen: React.FC = () => {
           {campaign.requirements && campaign.requirements.length > 0 && (
             <View style={[styles.requirementsCard, { backgroundColor: theme.colors.surface }]}>
               <Text style={[styles.requirementsTitle, { color: theme.colors.text }]}>{t.requirements}</Text>
-              {campaign.requirements.map((requirement, index) => (
+              {campaign.requirements.map((requirement: string, index: number) => (
                 <View key={index} style={styles.requirementItem}>
                   <View style={[styles.requirementBullet, { backgroundColor: theme.colors.primary }]} />
                   <Text style={[styles.requirementText, { color: theme.colors.textSecondary }]}>{requirement}</Text>
@@ -500,7 +489,7 @@ const CampaignDetailsScreen: React.FC = () => {
           </View>
 
           {campaign.socialLinks && campaign.socialLinks.length > 0 ? (
-            campaign.socialLinks.map((link) => (
+            campaign.socialLinks.map((link: SocialLink) => (
               <TouchableOpacity
                 key={link.id}
                 style={[styles.socialCard, { backgroundColor: theme.colors.surface }]}
@@ -706,13 +695,10 @@ const CampaignDetailsScreen: React.FC = () => {
                 <Text style={[styles.cancelButtonText, { color: theme.colors.textSecondary }]}>{t.cancel}</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.submitButton, { backgroundColor: theme.colors.primary }, isSubmittingPost && styles.submitButtonDisabled]}
+                style={[styles.submitButton, { backgroundColor: theme.colors.primary }]}
                 onPress={handleSubmitPost}
-                disabled={isSubmittingPost}
               >
-                <Text style={styles.submitButtonText}>
-                  {isSubmittingPost ? 'Dodawanie...' : 'Dodaj post'}
-                </Text>
+                <Text style={styles.submitButtonText}>Dodaj post</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -1285,9 +1271,6 @@ function createStyles(theme: any) {
       paddingVertical: 16,
       borderRadius: 12,
       alignItems: 'center',
-    },
-    submitButtonDisabled: {
-      opacity: 0.6,
     },
     submitButtonText: {
       fontSize: 16,

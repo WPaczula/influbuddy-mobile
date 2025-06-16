@@ -57,4 +57,23 @@ export function useDeleteCampaign() {
       queryClient.invalidateQueries({ queryKey: campaignKeys.lists() });
     },
   });
+}
+
+export function useAddPost() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ campaignId, postUrl, platform, postType, description }: {
+      campaignId: string;
+      postUrl: string;
+      platform: string;
+      postType: string;
+      description?: string;
+    }) => campaignsService.addPost(campaignId, postUrl, platform, postType, description),
+    onSuccess: (data) => {
+      console.log(data);
+      // Invalidate and refetch the campaign details
+      queryClient.invalidateQueries({ queryKey: campaignKeys.detail(data.id) });
+    },
+  });
 } 
