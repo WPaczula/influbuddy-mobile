@@ -1,14 +1,16 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useData } from '@/hooks/useData';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useState, useEffect } from 'react';
 import { Partner } from '@/types';
 import { ArrowLeft, Calendar, DollarSign, Plus, X, ChevronDown, Building2, Check, Save } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useUpdateCampaign } from '@/hooks/queries/useCampaigns';
+import { useUpdateCampaign, campaignKeys } from '@/hooks/queries/useCampaigns';
+import { useQuery } from '@tanstack/react-query';
+import { campaignsService } from '@/services/campaigns';
+import { usePartners } from '@/hooks/queries/usePartners';
 
 interface CampaignForm {
   title: string;
@@ -25,10 +27,13 @@ export default function EditCampaignScreen() {
   const { t, language } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { partners, campaigns } = useData();
+  const { data: partners = [], isLoading: isLoadingPartners } = usePartners();
   const updateCampaignMutation = useUpdateCampaign();
 
-  const campaign = campaigns.find(c => c.id === id);
+  const { data: campaign, isLoading: isLoadingCampaign, error } = useQuery({
+    queryKey: campaignKeys.detail(id),
+    queryFn: () => campaignsService.getDetails(id),
+  });
 
   const [form, setForm] = useState<CampaignForm>({
     title: '',
@@ -56,7 +61,7 @@ export default function EditCampaignScreen() {
         description: campaign.description || '',
         partnerId: campaign.partnerId || '',
         amount: campaign.productValue?.toString() || '',
-        startDate: campaign.startDate ? new Date(campaign.startDate) : new Date(),
+        startDate: new Date(),
         deadline: campaign.deadline ? new Date(campaign.deadline) : new Date(),
         requirements: campaign.requirements && campaign.requirements.length > 0 ? campaign.requirements : [''],
       });
@@ -64,21 +69,7 @@ export default function EditCampaignScreen() {
     }
   }, [campaign, isLoaded]);
 
-  if (!campaign) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <View style={styles.errorContainer}>
-          <Text style={[styles.errorText, { color: theme.colors.error }]}>Campaign not found</Text>
-          <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.colors.primary }]} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Go Back</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Show loading state until form is populated
-  if (!isLoaded) {
+  if (isLoadingCampaign || isLoadingPartners) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.loadingContainer}>
@@ -88,7 +79,20 @@ export default function EditCampaignScreen() {
     );
   }
 
-  const selectedPartner = partners.find(p => p.id === form.partnerId);
+  if (error || !campaign) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.errorContainer}>
+          <Text style={[styles.errorText, { color: theme.colors.error }]}>{t.loadingError}</Text>
+          <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.colors.primary }]} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>{t.back}</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const selectedPartner = partners.find((p: Partner) => p.id === form.partnerId);
 
   const formatDate = (date: Date) => {
     const locale = language === 'pl' ? 'pl-PL' : 'en-US';
@@ -144,11 +148,8 @@ export default function EditCampaignScreen() {
         }
       });
 
-      Alert.alert(
-        t.success,
-        t.campaignUpdated,
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
+      // Navigate back to details screen
+      router.replace(`/campaigns/${campaign.id}`);
     } catch (error) {
       Alert.alert(t.error, t.updateCampaignError);
     } finally {

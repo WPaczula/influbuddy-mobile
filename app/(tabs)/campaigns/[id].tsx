@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useAddPost, campaignKeys } from '@/hooks/queries/useCampaigns';
 import { useUpdateCampaign } from '@/hooks/queries/useCampaigns';
+import { usePartners } from '@/hooks/queries/usePartners';
 
 interface AddPostForm {
   url: string;
@@ -36,6 +37,9 @@ const CampaignDetailsScreen: React.FC = () => {
     platform: 'instagram',
   });
   const [showSummaryModal, setShowSummaryModal] = useState(false);
+
+  // Preload partners data
+  usePartners();
 
   const { data: campaign, isLoading } = useQuery({
     queryKey: campaignKeys.detail(id),
