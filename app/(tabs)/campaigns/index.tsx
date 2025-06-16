@@ -3,42 +3,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import CampaignCard from '@/components/CampaignCard';
 import CampaignCardSkeleton from '@/components/CampaignCardSkeleton';
 import FilterChipSkeleton from '@/components/FilterChipSkeleton';
 import { Search, Plus, Filter } from 'lucide-react-native';
-import { campaignsService } from '@/services/campaigns';
+import { useCampaigns } from '@/hooks/queries/useCampaigns';
 import { Campaign } from '@/types';
 
 export default function CampaignsScreen() {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'DRAFT' | 'ACTIVE' | 'WAITING_FOR_PAYMENT' | 'COMPLETED' | 'CANCELLED'>('all');
   const router = useRouter();
+  const { data: campaigns = [], isLoading } = useCampaigns();
 
   const styles = createStyles(theme);
-
-  useEffect(() => {
-    loadCampaigns();
-  }, []);
-
-  const loadCampaigns = async () => {
-    try {
-      setLoading(true);
-      const data = await campaignsService.list();
-      setCampaigns(data);
-    } catch (error) {
-      console.error('Error loading campaigns:', error);
-      // You might want to show an error message to the user here
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filteredCampaigns = campaigns
     .filter(campaign => {
@@ -118,7 +100,7 @@ export default function CampaignsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {loading ? renderLoadingState() : (
+      {isLoading ? renderLoadingState() : (
         <>
           {/* Compact Search */}
           <View style={[styles.searchContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>

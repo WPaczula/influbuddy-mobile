@@ -1,16 +1,15 @@
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useState, useEffect } from 'react';
-import { Partner } from '@/types';
 import { ArrowLeft, Calendar, DollarSign, Plus, X, ChevronDown, Building2, Check, Save } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useUpdateCampaign, campaignKeys } from '@/hooks/queries/useCampaigns';
-import { useQuery } from '@tanstack/react-query';
-import { campaignsService } from '@/services/campaigns';
+import { useCampaign, useUpdateCampaign } from '@/hooks/queries/useCampaigns';
 import { usePartners } from '@/hooks/queries/usePartners';
+import { Campaign, Partner } from '@/types';
+import CampaignDetailsSkeleton from '@/components/CampaignDetailsSkeleton';
 
 interface CampaignForm {
   title: string;
@@ -28,12 +27,8 @@ export default function EditCampaignScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { data: partners = [], isLoading: isLoadingPartners } = usePartners();
+  const { data: campaign, isLoading: isLoadingCampaign, error } = useCampaign(id);
   const updateCampaignMutation = useUpdateCampaign();
-
-  const { data: campaign, isLoading: isLoadingCampaign, error } = useQuery({
-    queryKey: campaignKeys.detail(id),
-    queryFn: () => campaignsService.getDetails(id),
-  });
 
   const [form, setForm] = useState<CampaignForm>({
     title: '',
@@ -70,23 +65,14 @@ export default function EditCampaignScreen() {
   }, [campaign, isLoaded]);
 
   if (isLoadingCampaign || isLoadingPartners) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>{t.loading}</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <CampaignDetailsSkeleton />;
   }
 
   if (error || !campaign) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.errorContainer}>
-          <Text style={[styles.errorText, { color: theme.colors.error }]}>{t.loadingError}</Text>
-          <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.colors.primary }]} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>{t.back}</Text>
-          </TouchableOpacity>
+          <Text style={[styles.errorText, { color: theme.colors.error }]}>{t.error}</Text>
         </View>
       </SafeAreaView>
     );

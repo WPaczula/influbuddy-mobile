@@ -7,13 +7,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
 import { Campaign, SocialLink } from '@/types';
 import { ArrowLeft, Calendar, DollarSign, ExternalLink, Building2, CircleCheck as CheckCircle, Clock, CirclePlay as PlayCircle, Pencil, Trash2, Plus, Eye, Heart, MessageCircle, Share as ShareIcon, X, Link as LinkIcon, FileText, Send, Instagram, Youtube, Twitter, Globe } from 'lucide-react-native';
-import { campaignsService } from '@/services/campaigns';
 import StatusBadge from '@/components/StatusBadge';
 import CampaignDetailsSkeleton from '@/components/CampaignDetailsSkeleton';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
-import { useQuery } from '@tanstack/react-query';
-import { useAddPost, campaignKeys } from '@/hooks/queries/useCampaigns';
-import { useUpdateCampaign } from '@/hooks/queries/useCampaigns';
+import { useCampaign, useAddPost, useUpdateCampaign } from '@/hooks/queries/useCampaigns';
 import { usePartners } from '@/hooks/queries/usePartners';
 
 interface AddPostForm {
@@ -41,11 +38,7 @@ const CampaignDetailsScreen: React.FC = () => {
   // Preload partners data
   usePartners();
 
-  const { data: campaign, isLoading } = useQuery({
-    queryKey: campaignKeys.detail(id),
-    queryFn: () => campaignsService.getDetails(id),
-  });
-
+  const { data: campaign, isLoading } = useCampaign(id);
   const addPostMutation = useAddPost();
   const updateCampaignMutation = useUpdateCampaign();
 

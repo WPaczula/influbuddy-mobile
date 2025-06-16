@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Campaign } from '@/types';
 import { campaignsService } from '@/services/campaigns';
 
@@ -10,15 +10,20 @@ export const campaignKeys = {
   detail: (id: string) => [...campaignKeys.details(), id] as const,
 };
 
-// Define the shape for creating a campaign (matches CreateCampaignDto)
-export interface CreateCampaignInput {
-  title: string;
-  description: string;
-  partnerId: string;
-  productValue: number;
-  deadline: Date;
-  status: 'DRAFT' | 'ACTIVE' | 'WAITING_FOR_PAYMENT' | 'COMPLETED' | 'CANCELLED';
-  requirements: string[];
+export type CreateCampaignInput = Omit<Campaign, 'id' | 'createdAt' | 'updatedAt' | 'partner'>;
+
+export function useCampaigns() {
+  return useQuery({
+    queryKey: campaignKeys.lists(),
+    queryFn: () => campaignsService.list(),
+  });
+}
+
+export function useCampaign(id: string) {
+  return useQuery({
+    queryKey: campaignKeys.detail(id),
+    queryFn: () => campaignsService.getDetails(id),
+  });
 }
 
 export function useCreateCampaign() {
@@ -37,10 +42,10 @@ export function useUpdateCampaign() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Campaign> }) =>
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Campaign> }) => 
       campaignsService.update(id, updates),
     onSuccess: (data) => {
-      // Invalidate and refetch campaigns list and details
+      // Invalidate and refetch both the list and the specific campaign
       queryClient.invalidateQueries({ queryKey: campaignKeys.lists() });
       queryClient.invalidateQueries({ queryKey: campaignKeys.detail(data.id) });
     },
@@ -52,9 +57,11 @@ export function useDeleteCampaign() {
 
   return useMutation({
     mutationFn: (id: string) => campaignsService.delete(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       // Invalidate and refetch campaigns list
       queryClient.invalidateQueries({ queryKey: campaignKeys.lists() });
+      // Remove the deleted campaign from the cache
+      queryClient.removeQueries({ queryKey: campaignKeys.detail(id) });
     },
   });
 }
