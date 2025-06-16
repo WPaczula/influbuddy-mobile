@@ -394,6 +394,18 @@ const CampaignDetailsScreen: React.FC = () => {
             </View>
           )}
 
+          {campaign.requirements && campaign.requirements.length > 0 && (
+            <View style={[styles.requirementsCard, { backgroundColor: theme.colors.surface }]}>
+              <Text style={[styles.requirementsTitle, { color: theme.colors.text }]}>{t.requirements}</Text>
+              {campaign.requirements.map((requirement, index) => (
+                <View key={index} style={styles.requirementItem}>
+                  <View style={[styles.requirementBullet, { backgroundColor: theme.colors.primary }]} />
+                  <Text style={[styles.requirementText, { color: theme.colors.textSecondary }]}>{requirement}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           {deadlineStatus && (
             <View style={[
               styles.urgentBanner,
@@ -837,6 +849,33 @@ function createStyles(theme: any) {
       fontSize: 16,
       fontFamily: 'Inter-Regular',
       lineHeight: 24,
+    },
+    requirementsCard: {
+      borderRadius: 12,
+      padding: 16,
+      marginTop: 16,
+    },
+    requirementsTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 12,
+    },
+    requirementItem: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginBottom: 8,
+    },
+    requirementBullet: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      marginTop: 6,
+      marginRight: 8,
+    },
+    requirementText: {
+      flex: 1,
+      fontSize: 14,
+      lineHeight: 20,
     },
     urgentBanner: {
       flexDirection: 'row',
