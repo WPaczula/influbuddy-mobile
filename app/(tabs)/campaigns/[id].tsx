@@ -191,7 +191,7 @@ const CampaignDetailsScreen: React.FC = () => {
         );
       case 'WAITING_FOR_PAYMENT':
         return (
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: theme.colors.success }]} onPress={() => updateStatus('COMPLETED')}>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: theme.colors.blue }]} onPress={() => updateStatus('COMPLETED')}>
             <Text style={styles.actionButtonText}>{t.markAsPaid}</Text>
           </TouchableOpacity>
         );
@@ -479,11 +479,11 @@ const CampaignDetailsScreen: React.FC = () => {
                   <Text style={[styles.timelineStepTitle, { color: theme.colors.text }]}>
                     {campaign.status === 'COMPLETED' ? t.earnings : t.campaignValue}
                   </Text>
-                  <Text style={[styles.timelineStepValue, { color: theme.colors.success }]}>
+                  <Text style={[styles.timelineStepValue, { color: campaign.status === 'WAITING_FOR_PAYMENT' ? theme.colors.blue : theme.colors.success }]}>
                     {formatCurrency(campaign.productValue)}
                   </Text>
                   {campaign.status === 'WAITING_FOR_PAYMENT' && (
-                    <Text style={[styles.timelineStepSubtext, { color: theme.colors.warning }]}>
+                    <Text style={[styles.timelineStepSubtext, { color: theme.colors.blue }]}>
                       {t.waitingForPayment}
                     </Text>
                   )}

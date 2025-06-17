@@ -343,7 +343,7 @@ export default function CalendarScreen() {
 
         <View style={styles.campaignsList}>
           <Text style={[styles.campaignsTitle, { color: theme.colors.text }]}>
-            Kampanie w {months[selectedMonth.getMonth()].toLowerCase()}
+            {t.campaignsInMonth}: {months[selectedMonth.getMonth()]}
           </Text>
 
           {monthCampaigns.length > 0 ? (
