@@ -28,6 +28,8 @@ export interface Translations {
   share: string;
   preview: string;
   required: string;
+  selectAll: string;
+  clearAll: string;
 
   // Dashboard
   goodMorning: string;
@@ -314,6 +316,8 @@ const englishTranslations: Translations = {
   share: 'Share',
   preview: 'Preview',
   required: 'Required',
+  selectAll: 'Select All',
+  clearAll: 'Clear All',
 
   // Dashboard
   goodMorning: 'Good morning! 👋',
@@ -600,6 +604,8 @@ const polishTranslations: Translations = {
   share: 'Udostępnij',
   preview: 'Podgląd',
   required: 'Wymagane',
+  selectAll: 'Zaznacz wszystkie',
+  clearAll: 'Wyczyść wszystkie',
 
   // Dashboard
   goodMorning: 'Dzień dobry! 👋',

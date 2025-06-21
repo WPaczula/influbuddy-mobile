@@ -1,13 +1,13 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useData } from '@/hooks/useData';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
 import { ArrowLeft, Calendar, Plus, X, ChevronDown, Check, Save } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCreateCampaign } from '@/hooks/queries/useCampaigns';
+import { usePartners } from '@/hooks/queries/usePartners';
 
 interface CampaignForm {
   title: string;
@@ -23,7 +23,7 @@ export default function AddCampaignScreen() {
   const { theme } = useTheme();
   const { t, language } = useLanguage();
   const router = useRouter();
-  const { partners, addCampaign } = useData();
+  const { data: partners = [] } = usePartners();
   const createCampaign = useCreateCampaign();
 
   const [form, setForm] = useState<CampaignForm>({
@@ -92,7 +92,7 @@ export default function AddCampaignScreen() {
         partnerId: form.partnerId,
         productValue: Number(form.amount.replace(/,/g, '')),
         requirements: form.requirements.filter(req => req.trim()),
-        deadline: form.deadline,
+        deadline: form.deadline.toISOString(),
         status: 'DRAFT',
       });
 

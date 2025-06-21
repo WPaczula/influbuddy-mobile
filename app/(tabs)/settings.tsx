@@ -1,13 +1,13 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Modal, TextInput, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
-import { useData } from '@/hooks/useData';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { useRouter } from 'expo-router';
-import { UserProfile } from '@/types';
 import { User, Bell, Shield, CircleHelp as HelpCircle, Star, LogOut, ChevronRight, Moon, Globe, Download, CreditCard as Edit, Save, X, Camera, Mail, Link as LinkIcon, Instagram, Youtube, Twitter, Check, Clock } from 'lucide-react-native';
+import { useCampaigns } from '@/hooks/queries/useCampaigns';
+import { usePartners } from '@/hooks/queries/usePartners';
 
 interface SettingItem {
   icon: React.ReactNode;
@@ -24,11 +24,23 @@ interface NotificationSettings {
   timings: ('hour' | 'day' | 'week')[];
 }
 
+interface EditForm {
+  name?: string;
+  bio?: string;
+  website?: string;
+  socialHandles?: {
+    instagram?: string;
+    tiktok?: string;
+    youtube?: string;
+  };
+}
+
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const { user, signOut, updateUserProfile } = useAuth();
-  const { getDashboardStats } = useData();
+  const { data: campaigns = [] } = useCampaigns();
+  const { data: partners = [] } = usePartners();
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationSettings>({
     enabled: true,
@@ -38,12 +50,37 @@ export default function SettingsScreen() {
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [tempNotificationTimings, setTempNotificationTimings] = useState<('hour' | 'day' | 'week')[]>(['day']);
-  const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
+  const [editForm, setEditForm] = useState<EditForm>({});
   const [isUpdating, setIsUpdating] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Create styles at the very beginning, before any conditional returns
   const styles = createStyles(theme);
+
+  // Calculate dashboard stats
+  const getDashboardStats = () => {
+    const totalEarnings = campaigns
+      .filter(c => c.status === 'COMPLETED')
+      .reduce((sum, c) => sum + (c.productValue || 0), 0);
+
+    const activeCampaigns = campaigns.filter(c => c.status === 'ACTIVE').length;
+    const totalPartners = partners.length;
+
+    const upcomingDeadlines = campaigns.filter(c => {
+      if (!c.deadline) return false;
+      const deadline = new Date(c.deadline);
+      const today = new Date();
+      const daysUntil = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      return daysUntil <= 7 && c.status !== 'COMPLETED';
+    }).length;
+
+    return {
+      totalEarnings,
+      activeCampaigns,
+      totalPartners,
+      upcomingDeadlines,
+    };
+  };
 
   const stats = getDashboardStats();
   const profile = user?.profile;
@@ -61,15 +98,12 @@ export default function SettingsScreen() {
   const handleEditProfile = () => {
     setEditForm({
       name: profile.name,
-      email: profile.email,
       bio: profile.bio || '',
       website: profile.website || '',
       socialHandles: {
         instagram: profile.socialHandles?.instagram || '',
         tiktok: profile.socialHandles?.tiktok || '',
         youtube: profile.socialHandles?.youtube || '',
-        twitter: profile.socialHandles?.twitter || '',
-        linkedin: profile.socialHandles?.linkedin || '',
       },
     });
     setShowProfileModal(true);
@@ -78,16 +112,6 @@ export default function SettingsScreen() {
   const validateForm = () => {
     if (!editForm.name?.trim()) {
       Alert.alert(t.error, t.nameRequired);
-      return false;
-    }
-    if (!editForm.email?.trim()) {
-      Alert.alert(t.error, t.emailRequired);
-      return false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(editForm.email.trim())) {
-      Alert.alert(t.error, t.validEmail);
       return false;
     }
 
@@ -106,15 +130,12 @@ export default function SettingsScreen() {
     try {
       await updateUserProfile({
         name: editForm.name?.trim(),
-        email: editForm.email?.trim(),
-        bio: editForm.bio?.trim() || undefined,
-        website: editForm.website?.trim() || undefined,
+        bio: editForm.bio?.trim(),
+        website: editForm.website?.trim(),
         socialHandles: {
-          instagram: editForm.socialHandles?.instagram?.trim() || undefined,
-          tiktok: editForm.socialHandles?.tiktok?.trim() || undefined,
-          youtube: editForm.socialHandles?.youtube?.trim() || undefined,
-          twitter: editForm.socialHandles?.twitter?.trim() || undefined,
-          linkedin: editForm.socialHandles?.linkedin?.trim() || undefined,
+          instagram: editForm.socialHandles?.instagram?.trim(),
+          tiktok: editForm.socialHandles?.tiktok?.trim(),
+          youtube: editForm.socialHandles?.youtube?.trim(),
         },
       });
       setShowProfileModal(false);
@@ -190,15 +211,15 @@ export default function SettingsScreen() {
     if (!notifications.enabled) {
       return t.campaignDeadlinesUpdates;
     }
-    
+
     if (notifications.timings.length === 0) {
       return `${t.campaignDeadlinesUpdates} • No timings selected`;
     }
-    
+
     if (notifications.timings.length === 1) {
       return `${t.campaignDeadlinesUpdates} • ${getNotificationTimingLabel(notifications.timings[0])}`;
     }
-    
+
     return `${t.campaignDeadlinesUpdates} • ${notifications.timings.length} timings selected`;
   };
 
@@ -230,7 +251,7 @@ export default function SettingsScreen() {
       timings: tempNotificationTimings
     });
     setShowNotificationModal(false);
-    
+
     // Here you would typically save to backend
     console.log('Notification settings saved:', {
       enabled: true,
@@ -454,7 +475,7 @@ export default function SettingsScreen() {
                 { key: 'week', label: 'Week before deadline', description: 'Get notified 1 week before the deadline' }
               ].map((option) => {
                 const isSelected = tempNotificationTimings.includes(option.key as 'hour' | 'day' | 'week');
-                
+
                 return (
                   <TouchableOpacity
                     key={option.key}
@@ -528,7 +549,7 @@ export default function SettingsScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
-                  styles.saveButton, 
+                  styles.saveButton,
                   { backgroundColor: theme.colors.primary },
                   tempNotificationTimings.length === 0 && { opacity: 0.5 }
                 ]}
@@ -640,7 +661,7 @@ export default function SettingsScreen() {
               <Text style={[styles.formSectionTitle, { color: theme.colors.text }]}>{t.basicInformation}</Text>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.fullName} *</Text>
+                <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.fullName}</Text>
                 <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
                   <User size={20} color={theme.colors.textSecondary} />
                   <TextInput
@@ -650,22 +671,6 @@ export default function SettingsScreen() {
                     placeholder="Your full name"
                     placeholderTextColor={theme.colors.textTertiary}
                     autoCapitalize="words"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.emailAddress} *</Text>
-                <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
-                  <Mail size={20} color={theme.colors.textSecondary} />
-                  <TextInput
-                    style={[styles.input, { color: theme.colors.text }]}
-                    value={editForm.email}
-                    onChangeText={(text) => setEditForm(prev => ({ ...prev, email: text }))}
-                    placeholder="your@email.com"
-                    placeholderTextColor={theme.colors.textTertiary}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
                     autoCorrect={false}
                   />
                 </View>
@@ -754,44 +759,6 @@ export default function SettingsScreen() {
                     onChangeText={(text) => setEditForm(prev => ({
                       ...prev,
                       socialHandles: { ...prev.socialHandles, youtube: text }
-                    }))}
-                    placeholder="@username"
-                    placeholderTextColor={theme.colors.textTertiary}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.twitter}</Text>
-                <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
-                  <Twitter size={20} color={theme.colors.textSecondary} />
-                  <TextInput
-                    style={[styles.input, { color: theme.colors.text }]}
-                    value={editForm.socialHandles?.twitter}
-                    onChangeText={(text) => setEditForm(prev => ({
-                      ...prev,
-                      socialHandles: { ...prev.socialHandles, twitter: text }
-                    }))}
-                    placeholder="@username"
-                    placeholderTextColor={theme.colors.textTertiary}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t.linkedin}</Text>
-                <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
-                  <Text style={styles.platformIcon}>💼</Text>
-                  <TextInput
-                    style={[styles.input, { color: theme.colors.text }]}
-                    value={editForm.socialHandles?.linkedin}
-                    onChangeText={(text) => setEditForm(prev => ({
-                      ...prev,
-                      socialHandles: { ...prev.socialHandles, linkedin: text }
                     }))}
                     placeholder="@username"
                     placeholderTextColor={theme.colors.textTertiary}

@@ -1,7 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, initializeAuth } from 'firebase/auth';
-// @ts-ignore
-import { getReactNativePersistence } from 'firebase/auth/react-native';
+import * as firebaseAuth from 'firebase/auth';
 import { Platform } from 'react-native';
 
 // Only import AsyncStorage on native
@@ -27,13 +26,14 @@ if (getApps().length === 0) {
 } else {
   app = getApps()[0];
 }
+const reactNativePersistence = (firebaseAuth as any).getReactNativePersistence
 
 // Initialize Auth with AsyncStorage persistence on native, default on web
 const auth =
   Platform.OS === 'web'
     ? getAuth(app)
     : initializeAuth(app, {
-        persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+        persistence: reactNativePersistence(ReactNativeAsyncStorage),
       });
 
 export { auth };

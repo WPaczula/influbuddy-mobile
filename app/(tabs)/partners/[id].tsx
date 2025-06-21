@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useData } from '@/hooks/useData';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
@@ -11,14 +10,15 @@ import CampaignCard from '@/components/CampaignCard';
 import PartnerDetailsSkeleton from '@/components/PartnerDetailsSkeleton';
 import { ArrowLeft, Save, X, Building2, Mail, Phone, Globe, Calendar, DollarSign, Users, Pencil } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { usePartner, useDeletePartner } from '@/hooks/queries/usePartners';
+import { usePartner, useDeletePartner, usePartners } from '@/hooks/queries/usePartners';
+import { useCampaigns } from '@/hooks/queries/useCampaigns';
 
 export default function PartnerDetailsScreen() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { partners, campaigns, updatePartner } = useData();
+  const { data: campaigns = [] } = useCampaigns();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Partner>>({});
   const [updating, setUpdating] = useState(false);

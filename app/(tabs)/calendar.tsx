@@ -1,6 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useData } from '@/hooks/useData';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
@@ -8,12 +7,16 @@ import { useRouter } from 'expo-router';
 import CampaignCard from '@/components/CampaignCard';
 import CalendarSkeleton from '@/components/CalendarSkeleton';
 import React from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowLeft, Clock, Filter, Check, X } from 'lucide-react-native';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowLeft, Clock, Filter, Check, X, Download } from 'lucide-react-native';
+import { Partner } from '@/types';
+import { useCampaigns } from '@/hooks/queries/useCampaigns';
+import { usePartners } from '@/hooks/queries/usePartners';
 
 export default function CalendarScreen() {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const { partners, campaigns, loading } = useData();
+  const { data: campaigns = [], isLoading: campaignsLoading } = useCampaigns();
+  const { data: partners = [], isLoading: partnersLoading } = usePartners();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedPartners, setSelectedPartners] = useState<string[]>([]);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -22,6 +25,7 @@ export default function CalendarScreen() {
   const router = useRouter();
 
   const styles = createStyles(theme);
+  const loading = campaignsLoading || partnersLoading;
 
   const months = [
     t.january, t.february, t.march, t.april, t.may, t.june,
@@ -40,14 +44,18 @@ export default function CalendarScreen() {
 
   const getMonthCampaigns = () => {
     return campaigns.filter(campaign => {
-      const deadline = new Date(campaign.deadline || '');
+      if (!campaign.deadline) return false;
+      const deadline = new Date(campaign.deadline);
       const isInMonth = deadline.getMonth() === selectedMonth.getMonth() &&
         deadline.getFullYear() === selectedMonth.getFullYear();
 
       const matchesPartner = selectedPartners.length === 0 || selectedPartners.includes(campaign.partnerId);
 
       return isInMonth && matchesPartner;
-    }).sort((a, b) => new Date(a.deadline || '').getTime() - new Date(b.deadline || '').getTime());
+    }).sort((a, b) => {
+      if (!a.deadline || !b.deadline) return 0;
+      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+    });
   };
 
   const monthCampaigns = getMonthCampaigns();
@@ -91,7 +99,8 @@ export default function CalendarScreen() {
 
   const getDayCampaigns = (day: number) => {
     return monthCampaigns.filter(campaign => {
-      const deadline = new Date(campaign.deadline || '');
+      if (!campaign.deadline) return false;
+      const deadline = new Date(campaign.deadline);
       return deadline.getDate() === day;
     });
   };
@@ -150,7 +159,7 @@ export default function CalendarScreen() {
     setShowDayModal(false);
     // Navigate with a parameter to indicate we came from calendar
     router.push({
-      pathname: `/campaigns/${campaignId}`,
+      pathname: `/campaigns/${campaignId}` as any,
       params: { from: 'calendar' }
     });
   };
@@ -186,6 +195,144 @@ export default function CalendarScreen() {
       return partner?.company || t.allPartners;
     } else {
       return `${selectedPartners.length} selected`;
+    }
+  };
+
+  const generateMonthlySummary = () => {
+    const monthName = months[selectedMonth.getMonth()];
+    const year = selectedMonth.getFullYear();
+
+    // Filter campaigns based on selected partners
+    const filteredCampaigns = selectedPartners.length === 0
+      ? monthCampaigns
+      : monthCampaigns.filter(campaign => selectedPartners.includes(campaign.partnerId));
+
+    // Group campaigns by status
+    const campaignsByStatus = {
+      active: filteredCampaigns.filter(c => c.status === 'ACTIVE'),
+      completed: filteredCampaigns.filter(c => c.status === 'COMPLETED'),
+      draft: filteredCampaigns.filter(c => c.status === 'DRAFT'),
+      waitingForPayment: filteredCampaigns.filter(c => c.status === 'WAITING_FOR_PAYMENT'),
+      cancelled: filteredCampaigns.filter(c => c.status === 'CANCELLED'),
+    };
+
+    // Calculate earnings
+    const totalEarnings = campaignsByStatus.completed.reduce((sum, c) => sum + (c.productValue || 0), 0);
+    const pendingEarnings = campaignsByStatus.waitingForPayment.reduce((sum, c) => sum + (c.productValue || 0), 0);
+
+    // Get partner information
+    const involvedPartners = [...new Set(filteredCampaigns.map(c => c.partnerId))]
+      .map(id => partners.find(p => p.id === id))
+      .filter(Boolean) as Partner[];
+
+    // Generate summary text using translations
+    let summary = `📅 ${t.campaignSummary.toUpperCase()} - ${monthName} ${year}\n`;
+    summary += `${'='.repeat(50)}\n\n`;
+
+    // Overview
+    summary += `📊 ${t.overview.toUpperCase()}\n`;
+    summary += `• ${t.campaigns}: ${filteredCampaigns.length}\n`;
+    summary += `• ${t.partners}: ${involvedPartners.length}\n`;
+    summary += `• ${t.totalEarnings}: $${totalEarnings.toLocaleString()}\n`;
+    if (pendingEarnings > 0) {
+      summary += `• ${t.waitingForPayment}: $${pendingEarnings.toLocaleString()}\n`;
+    }
+    summary += `\n`;
+
+    // Campaign Status Breakdown
+    summary += `📈 ${t.campaigns.toUpperCase()}\n`;
+    if (campaignsByStatus.active.length > 0) summary += `• ${t.active}: ${campaignsByStatus.active.length}\n`;
+    if (campaignsByStatus.completed.length > 0) summary += `• ${t.completed}: ${campaignsByStatus.completed.length}\n`;
+    if (campaignsByStatus.draft.length > 0) summary += `• ${t.draft}: ${campaignsByStatus.draft.length}\n`;
+    if (campaignsByStatus.waitingForPayment.length > 0) summary += `• ${t.waitingForPayment}: ${campaignsByStatus.waitingForPayment.length}\n`;
+    if (campaignsByStatus.cancelled.length > 0) summary += `• ${t.cancelled}: ${campaignsByStatus.cancelled.length}\n`;
+    summary += `\n`;
+
+    // Partners
+    if (involvedPartners.length > 0) {
+      summary += `🤝 ${t.partners.toUpperCase()}\n`;
+      involvedPartners.forEach(partner => {
+        const partnerCampaigns = filteredCampaigns.filter(c => c.partnerId === partner.id);
+        const partnerEarnings = partnerCampaigns
+          .filter(c => c.status === 'COMPLETED')
+          .reduce((sum, c) => sum + (c.productValue || 0), 0);
+        summary += `• ${partner.company} (${partnerCampaigns.length} ${t.campaigns.toLowerCase()}`;
+        if (partnerEarnings > 0) {
+          summary += `, $${partnerEarnings.toLocaleString()} ${t.earnings.toLowerCase()}`;
+        }
+        summary += `)\n`;
+      });
+      summary += `\n`;
+    }
+
+    // Campaign Details
+    if (filteredCampaigns.length > 0) {
+      summary += `📋 ${t.campaignDetails.toUpperCase()}\n`;
+
+      // Group by week
+      const campaignsByWeek: { [key: string]: typeof filteredCampaigns } = {};
+      filteredCampaigns.forEach(campaign => {
+        if (campaign.deadline) {
+          const deadline = new Date(campaign.deadline);
+          const weekStart = new Date(deadline);
+          weekStart.setDate(deadline.getDate() - deadline.getDay());
+          const weekKey = `${t.calendar} ${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+
+          if (!campaignsByWeek[weekKey]) {
+            campaignsByWeek[weekKey] = [];
+          }
+          campaignsByWeek[weekKey].push(campaign);
+        }
+      });
+
+      Object.entries(campaignsByWeek).forEach(([week, campaigns]) => {
+        summary += `\n${week}:\n`;
+        campaigns.forEach(campaign => {
+          const partner = partners.find(p => p.id === campaign.partnerId);
+          const deadline = new Date(campaign.deadline || '');
+          const statusEmoji = {
+            'ACTIVE': '🟡',
+            'COMPLETED': '✅',
+            'DRAFT': '⚪',
+            'WAITING_FOR_PAYMENT': '💰',
+            'CANCELLED': '❌'
+          }[campaign.status] || '⚪';
+
+          summary += `  ${statusEmoji} ${campaign.title}\n`;
+          summary += `     ${t.partner}: ${partner?.company || 'Unknown'}\n`;
+          summary += `     ${t.deadline}: ${deadline.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}\n`;
+          if (campaign.productValue) {
+            summary += `     ${t.campaignValue}: $${campaign.productValue.toLocaleString()}\n`;
+          }
+        });
+      });
+    }
+
+    summary += `\n${'='.repeat(50)}\n`;
+    summary += `${t.generateReport} ${new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}\n`;
+
+    return summary;
+  };
+
+  const handleDownloadSummary = async () => {
+    try {
+      const summary = generateMonthlySummary();
+      const monthName = months[selectedMonth.getMonth()];
+      const year = selectedMonth.getFullYear();
+
+      await Share.share({
+        message: summary,
+        title: `${t.campaignSummary} - ${monthName} ${year}`,
+      });
+    } catch (error) {
+      Alert.alert(t.error, 'Failed to generate summary');
     }
   };
 
@@ -231,8 +378,8 @@ export default function CalendarScreen() {
             )}
           </TouchableOpacity>
 
-          {
-            selectedPartners.length > 0 && (
+          <View style={styles.filterActions}>
+            {selectedPartners.length > 0 && (
               <TouchableOpacity
                 style={[styles.clearButton, { backgroundColor: theme.colors.errorLight }]}
                 onPress={clearAllPartners}
@@ -240,9 +387,16 @@ export default function CalendarScreen() {
                 <X size={16} color={theme.colors.error} />
               </TouchableOpacity>
             )}
-        </View >
-      )
-      }
+
+            <TouchableOpacity
+              style={[styles.downloadButton, { backgroundColor: theme.colors.primaryLight }]}
+              onPress={handleDownloadSummary}
+            >
+              <Download size={16} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={[styles.calendar, { backgroundColor: theme.colors.surface, shadowColor: theme.colors.shadow }]}>
@@ -271,19 +425,19 @@ export default function CalendarScreen() {
                 if (hasDeadlines && deadlineStatus) {
                   switch (deadlineStatus) {
                     case 'overdue':
-                      dayBackgroundColor = theme.colors.errorLight;
-                      dayBorderColor = theme.colors.error;
-                      dayTextColor = theme.colors.error;
+                      dayBackgroundColor = '#FED7D7';
+                      dayBorderColor = '#FC8181';
+                      dayTextColor = '#E53E3E';
                       break;
                     case 'dueToday':
-                      dayBackgroundColor = theme.colors.warningLight;
-                      dayBorderColor = theme.colors.warning;
-                      dayTextColor = theme.colors.warning;
+                      dayBackgroundColor = '#FEF5E7';
+                      dayBorderColor = '#F6AD55';
+                      dayTextColor = '#DD6B20';
                       break;
                     case 'normal':
-                      dayBackgroundColor = theme.colors.borderLight;
-                      dayBorderColor = theme.colors.border;
-                      dayTextColor = theme.colors.primary;
+                      dayBackgroundColor = '#E6FFFA';
+                      dayBorderColor = '#68D391';
+                      dayTextColor = '#38A169';
                       break;
                   }
                 }
@@ -293,46 +447,26 @@ export default function CalendarScreen() {
                     key={dayIndex}
                     style={[
                       styles.day,
-                      hasDeadlines && {
+                      {
                         backgroundColor: dayBackgroundColor,
                         borderColor: dayBorderColor,
-                        borderWidth: 1,
+                        borderWidth: hasDeadlines ? 2 : 0,
                       }
                     ]}
                     onPress={() => day && handleDayPress(day)}
-                    disabled={!day || !hasDeadlines}
-                    activeOpacity={hasDeadlines ? 0.7 : 1}
+                    disabled={!day}
                   >
-                    {day && (
-                      <React.Fragment>
-                        <Text style={[
-                          styles.dayNumber,
-                          { color: dayTextColor },
-                          isToday ? [styles.todayNumber, { color: theme.colors.primary, backgroundColor: theme.colors.primaryLight }] : {},
-                          hasDeadlines && !isToday && { color: dayTextColor }
-                        ]}>
-                          {day}
-                        </Text>
-                        {dayCampaigns.length > 0 && (
-                          <View style={styles.campaignDots}>
-                            {dayCampaigns.slice(0, 3).map((_, index) => {
-                              let dotColor = theme.colors.primary;
-                              if (deadlineStatus === 'overdue') {
-                                dotColor = theme.colors.error;
-                              } else if (deadlineStatus === 'dueToday') {
-                                dotColor = theme.colors.warning;
-                              }
-
-                              return (
-                                <View key={index} style={[styles.campaignDot, { backgroundColor: dotColor }]} />
-                              );
-                            })}
-                            {dayCampaigns.length > 3 && (
-                              <Text style={[styles.moreDots, { color: dayTextColor }]}>+{dayCampaigns.length - 3}</Text>
-                            )}
-                          </View>
-                        )}
-                      </React.Fragment>
+                    <Text style={[
+                      styles.dayText,
+                      {
+                        color: day ? dayTextColor : theme.colors.textSecondary,
+                        fontWeight: isToday ? 'bold' : 'normal',
+                      }
+                    ]}>
+                      {day || ''}
+                    </Text>
+                    {hasDeadlines && (
+                      <View style={[styles.deadlineIndicator, { backgroundColor: dayBorderColor }]} />
                     )}
                   </TouchableOpacity>
                 );
@@ -341,190 +475,133 @@ export default function CalendarScreen() {
           ))}
         </View>
 
-        <View style={styles.campaignsList}>
-          <Text style={[styles.campaignsTitle, { color: theme.colors.text }]}>
-            {t.campaignsInMonth}: {months[selectedMonth.getMonth()]}
-          </Text>
-
-          {monthCampaigns.length > 0 ? (
-            monthCampaigns.map(campaign => {
-              const partner = partners.find(p => p.id === campaign.partnerId);
-              return partner ? (
-                <CampaignCard
-                  key={campaign.id}
-                  campaign={campaign}
-                  onPress={() => router.push(`/campaigns/${campaign.id}`)}
-                />
-              ) : null;
-            })
-          ) : (
-            <View style={[styles.emptyState, { backgroundColor: theme.colors.surface, borderColor: theme.colors.borderLight }]}>
-              <CalendarIcon size={48} color={theme.colors.border} />
-              <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>{t.noCampaignsThisMonth}</Text>
-              <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                {selectedPartners.length > 0
-                  ? 'Brak kampanii od wybranych partnerów w tym miesiącu'
-                  : t.scheduleCampaigns
-                }
-              </Text >
-            </View >
-          )
-          }
-        </View >
-      </ScrollView >
-
-      {/* Partner Filter Modal */}
-      < Modal
-        visible={showPartnerFilter}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
-          <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
-            <TouchableOpacity
-              style={[styles.modalBackButton, { backgroundColor: theme.colors.borderLight }]}
-              onPress={() => setShowPartnerFilter(false)}
-            >
-              <X size={24} color={theme.colors.textSecondary} />
-            </TouchableOpacity>
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Filter Partners</Text>
-            <View style={styles.modalBackButton} />
+        {monthCampaigns.length === 0 && (
+          <View style={[styles.emptyState, { backgroundColor: theme.colors.surface }]}>
+            <CalendarIcon size={64} color={theme.colors.textSecondary} />
+            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>{t.noCampaignsThisMonth}</Text>
+            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+              {t.scheduleCampaigns}
+            </Text>
           </View>
+        )}
+      </ScrollView>
 
-          <View style={styles.modalActions}>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: theme.colors.borderLight }]}
-              onPress={clearAllPartners}
-            >
-              <Text style={[styles.actionButtonText, { color: theme.colors.textSecondary }]}>Clear All</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: theme.colors.primary }]}
-              onPress={selectAllPartners}
-            >
-              <Text style={[styles.actionButtonText, { color: 'white' }]}>Select All</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.partnersList}>
-            {partners.map(partner => {
-              const isSelected = selectedPartners.includes(partner.id);
-              const campaignCount = campaigns.filter(c =>
-                c.partnerId === partner.id &&
-                new Date(c.deadline || '').getMonth() === selectedMonth.getMonth() &&
-                new Date(c.deadline || '').getFullYear() === selectedMonth.getFullYear()
-              ).length;
-
-              return (
-                <TouchableOpacity
-                  key={partner.id}
-                  style={[
-                    styles.partnerOption,
-                    { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.borderLight },
-                    isSelected && { backgroundColor: theme.colors.primaryLight }
-                  ]}
-                  onPress={() => togglePartnerSelection(partner.id)}
-                >
-                  <View style={styles.partnerInfo}>
-                    <View style={[styles.partnerAvatar, { backgroundColor: theme.colors.primary }]}>
-                      <Text style={styles.partnerAvatarText}>
-                        {partner.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </Text>
-                    </View>
-                    <View style={styles.partnerDetails}>
-                      <Text style={[styles.partnerName, { color: theme.colors.text }]}>{partner.name}</Text>
-                      <Text style={[styles.partnerCompany, { color: theme.colors.textSecondary }]}>{partner.company}</Text>
-                      {campaignCount > 0 && (
-                        <Text style={[styles.campaignCount, { color: theme.colors.primary }]}>
-                          {campaignCount} campaign{campaignCount !== 1 ? 's' : ''} this month
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                  <View style={[
-                    styles.checkbox,
-                    { borderColor: theme.colors.border },
-                    isSelected && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
-                  ]}>
-                    {isSelected && <Check size={16} color="white" />}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          <View style={[styles.modalFooter, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border }]}>
-            <TouchableOpacity
-              style={[styles.applyButton, { backgroundColor: theme.colors.primary }]}
-              onPress={() => setShowPartnerFilter(false)}
-            >
-              <Text style={styles.applyButtonText}>
-                Apply Filter ({selectedPartners.length} selected)
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </Modal >
-
-      {/* Day Detail Modal */}
-      < Modal
+      {/* Day Modal */}
+      <Modal
         visible={showDayModal}
         animationType="slide"
         presentationStyle="pageSheet"
+        onRequestClose={handleModalClose}
       >
         <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
-          <View style={[styles.modalHeader, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
-            <TouchableOpacity
-              style={[styles.modalBackButton, { backgroundColor: theme.colors.borderLight }]}
-              onPress={handleModalClose}
-            >
-              <ArrowLeft size={24} color={theme.colors.textSecondary} />
+          <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
+            <TouchableOpacity onPress={handleModalClose} style={styles.modalCloseButton}>
+              <ArrowLeft size={24} color={theme.colors.text} />
             </TouchableOpacity>
-            <View style={styles.modalTitleSection}>
-              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Terminy</Text>
-              <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>{formatSelectedDate()}</Text>
-            </View>
-            <View style={styles.modalBackButton} />
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              {formatSelectedDate()}
+            </Text>
+            <View style={styles.modalCloseButton} />
           </View>
 
           <ScrollView style={styles.modalContent}>
             {selectedDayCampaigns.length > 0 ? (
-              <>
-                <View style={[styles.modalStats, { backgroundColor: theme.colors.surface, shadowColor: theme.colors.shadow }]}>
-                  <View style={styles.modalStatItem}>
-                    <Clock size={20} color={theme.colors.primary} />
-                    <Text style={[styles.modalStatText, { color: theme.colors.text }]}>
-                      {selectedDayCampaigns.length} {selectedDayCampaigns.length === 1 ? 'termin' : selectedDayCampaigns.length < 5 ? 'terminy' : 'terminów'}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.modalCampaignsList}>
-                  {selectedDayCampaigns.map(campaign => {
-                    const partner = partners.find(p => p.id === campaign.partnerId);
-                    return partner ? (
-                      <CampaignCard
-                        key={campaign.id}
-                        campaign={campaign}
-                        onPress={() => handleCampaignPress(campaign.id)}
-                      />
-                    ) : null;
-                  })}
-                </View>
-              </>
+              <View style={styles.modalCampaignsList}>
+                {selectedDayCampaigns.map(campaign => {
+                  const partner = partners.find(p => p.id === campaign.partnerId);
+                  return partner ? (
+                    <CampaignCard
+                      key={campaign.id}
+                      campaign={campaign}
+                      onPress={() => handleCampaignPress(campaign.id)}
+                    />
+                  ) : null;
+                })}
+              </View>
             ) : (
-              <View style={styles.modalEmptyState}>
-                <CalendarIcon size={48} color={theme.colors.border} />
+              <View style={[styles.modalEmptyState, { backgroundColor: theme.colors.surface }]}>
+                <Clock size={64} color={theme.colors.textSecondary} />
                 <Text style={[styles.modalEmptyTitle, { color: theme.colors.text }]}>{t.noDeadlines}</Text>
-                <Text style={[styles.modalEmptyText, { color: theme.colors.textSecondary }]}>
-                  Brak terminów kampanii w tym dniu
-                </Text>
               </View>
             )}
           </ScrollView>
         </SafeAreaView>
-      </Modal >
-    </SafeAreaView >
+      </Modal>
+
+      {/* Partner Filter Modal */}
+      <Modal
+        visible={showPartnerFilter}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPartnerFilter(false)}
+      >
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
+            <TouchableOpacity onPress={() => setShowPartnerFilter(false)} style={styles.modalCloseButton}>
+              <ArrowLeft size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              {t.filter}
+            </Text>
+            <View style={styles.modalCloseButton} />
+          </View>
+
+          <View style={styles.modalContent}>
+            <View style={styles.filterActions}>
+              <TouchableOpacity
+                style={[styles.filterActionButton, { backgroundColor: theme.colors.primaryLight }]}
+                onPress={selectAllPartners}
+              >
+                <Check size={16} color={theme.colors.primary} />
+                <Text style={[styles.filterActionText, { color: theme.colors.primary }]}>
+                  {t.selectAll}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.filterActionButton, { backgroundColor: theme.colors.errorLight }]}
+                onPress={clearAllPartners}
+              >
+                <X size={16} color={theme.colors.error} />
+                <Text style={[styles.filterActionText, { color: theme.colors.error }]}>
+                  {t.clearAll}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.partnersList}>
+              {partners.map(partner => (
+                <TouchableOpacity
+                  key={partner.id}
+                  style={[
+                    styles.partnerItem,
+                    {
+                      backgroundColor: selectedPartners.includes(partner.id)
+                        ? theme.colors.primaryLight
+                        : theme.colors.surface,
+                      borderColor: theme.colors.border,
+                    }
+                  ]}
+                  onPress={() => togglePartnerSelection(partner.id)}
+                >
+                  <View style={styles.partnerInfo}>
+                    <Text style={[styles.partnerName, { color: theme.colors.text }]}>
+                      {partner.company}
+                    </Text>
+                    <Text style={[styles.partnerEmail, { color: theme.colors.textSecondary }]}>
+                      {partner.email}
+                    </Text>
+                  </View>
+                  {selectedPartners.includes(partner.id) && (
+                    <Check size={20} color={theme.colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </SafeAreaView>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
@@ -585,7 +662,15 @@ function createStyles(theme: any) {
       fontFamily: 'Inter-Bold',
       color: 'white',
     },
+    filterActions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
     clearButton: {
+      padding: 8,
+      borderRadius: 8,
+    },
+    downloadButton: {
       padding: 8,
       borderRadius: 8,
     },
@@ -625,33 +710,16 @@ function createStyles(theme: any) {
       alignItems: 'center',
       borderRadius: 8,
     },
-    dayNumber: {
+    dayText: {
       fontSize: 16,
       fontFamily: 'Inter-Regular',
       marginBottom: 4,
     },
-    todayNumber: {
-      fontFamily: 'Inter-Bold',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 12,
-      overflow: 'hidden',
-    },
-    campaignDots: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      gap: 2,
-    },
-    campaignDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-    },
-    moreDots: {
-      fontSize: 10,
-      fontFamily: 'Inter-Medium',
-      marginLeft: 2,
+    deadlineIndicator: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      marginLeft: 4,
     },
     campaignsList: {
       marginBottom: 32,
@@ -692,7 +760,7 @@ function createStyles(theme: any) {
       paddingVertical: 16,
       borderBottomWidth: 1,
     },
-    modalBackButton: {
+    modalCloseButton: {
       padding: 8,
       borderRadius: 8,
       width: 40,
@@ -700,128 +768,13 @@ function createStyles(theme: any) {
       justifyContent: 'center',
       alignItems: 'center',
     },
-    modalTitleSection: {
-      flex: 1,
-      alignItems: 'center',
-    },
     modalTitle: {
       fontSize: 20,
       fontFamily: 'Inter-Bold',
       marginBottom: 2,
     },
-    modalSubtitle: {
-      fontSize: 14,
-      fontFamily: 'Inter-Regular',
-      textAlign: 'center',
-    },
     modalContent: {
       flex: 1,
-    },
-    modalActions: {
-      flexDirection: 'row',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      gap: 12,
-    },
-    actionButton: {
-      flex: 1,
-      paddingVertical: 12,
-      borderRadius: 8,
-      alignItems: 'center',
-    },
-    actionButtonText: {
-      fontSize: 14,
-      fontFamily: 'Inter-SemiBold',
-    },
-    partnersList: {
-      flex: 1,
-    },
-    partnerOption: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      borderBottomWidth: 1,
-    },
-    partnerInfo: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    partnerAvatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 12,
-    },
-    partnerAvatarText: {
-      fontSize: 14,
-      fontFamily: 'Inter-Bold',
-      color: 'white',
-    },
-    partnerDetails: {
-      flex: 1,
-    },
-    partnerName: {
-      fontSize: 16,
-      fontFamily: 'Inter-SemiBold',
-      marginBottom: 2,
-    },
-    partnerCompany: {
-      fontSize: 14,
-      fontFamily: 'Inter-Regular',
-      marginBottom: 2,
-    },
-    campaignCount: {
-      fontSize: 12,
-      fontFamily: 'Inter-Medium',
-    },
-    checkbox: {
-      width: 24,
-      height: 24,
-      borderRadius: 4,
-      borderWidth: 2,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    modalFooter: {
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      borderTopWidth: 1,
-    },
-    applyButton: {
-      paddingVertical: 16,
-      borderRadius: 12,
-      alignItems: 'center',
-    },
-    applyButtonText: {
-      fontSize: 16,
-      fontFamily: 'Inter-SemiBold',
-      color: 'white',
-    },
-    modalStats: {
-      marginHorizontal: 20,
-      marginTop: 20,
-      borderRadius: 12,
-      padding: 16,
-      shadowOffset: {
-        width: 0,
-        height: 1,
-      },
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
-      elevation: 2,
-    },
-    modalStatItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    modalStatText: {
-      fontSize: 16,
-      fontFamily: 'Inter-SemiBold',
     },
     modalCampaignsList: {
       padding: 20,
@@ -842,6 +795,41 @@ function createStyles(theme: any) {
       fontSize: 14,
       fontFamily: 'Inter-Regular',
       textAlign: 'center',
+    },
+    partnerItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+    },
+    partnerInfo: {
+      flex: 1,
+    },
+    partnerName: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      marginBottom: 2,
+    },
+    partnerEmail: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      marginBottom: 2,
+    },
+    filterActionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 8,
+      gap: 8,
+    },
+    filterActionText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+    },
+    partnersList: {
+      flex: 1,
     },
   });
 }

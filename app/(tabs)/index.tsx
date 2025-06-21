@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useData } from '@/hooks/useData';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useState } from 'react';
@@ -12,36 +11,73 @@ import CampaignCard from '@/components/CampaignCard';
 import CampaignCardSkeleton from '@/components/CampaignCardSkeleton';
 import HeaderSkeleton from '@/components/HeaderSkeleton';
 import { DollarSign, ChartBar as BarChart3, Users, Clock, Sparkles, TrendingUp } from 'lucide-react-native';
+import { useCampaigns } from '@/hooks/queries/useCampaigns';
+import { usePartners } from '@/hooks/queries/usePartners';
 
 export default function DashboardScreen() {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const { partners, campaigns, loading, getDashboardStats } = useData();
+  const { data: campaigns = [], isLoading: campaignsLoading, refetch: refetchCampaigns } = useCampaigns();
+  const { data: partners = [], isLoading: partnersLoading, refetch: refetchPartners } = usePartners();
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
   const styles = createStyles(theme);
 
+  const loading = campaignsLoading || partnersLoading;
+
+  // Calculate dashboard stats
+  const getDashboardStats = () => {
+    const totalEarnings = campaigns
+      .filter(c => c.status === 'COMPLETED')
+      .reduce((sum, c) => sum + (c.productValue || 0), 0);
+
+    const activeCampaigns = campaigns.filter(c => c.status === 'ACTIVE').length;
+    const totalPartners = partners.length;
+
+    const upcomingDeadlines = campaigns.filter(c => {
+      if (!c.deadline) return false;
+      const deadline = new Date(c.deadline);
+      const today = new Date();
+      const daysUntil = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      return daysUntil <= 7 && c.status !== 'COMPLETED';
+    }).length;
+
+    return {
+      totalEarnings,
+      activeCampaigns,
+      totalPartners,
+      upcomingDeadlines,
+    };
+  };
+
   const stats = getDashboardStats();
 
   const recentCampaigns = campaigns
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    })
     .slice(0, 3);
 
   const upcomingDeadlines = campaigns
     .filter(c => {
+      if (!c.deadline) return false;
       const deadline = new Date(c.deadline);
       const today = new Date();
       const daysUntil = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      return daysUntil <= 7 && c.status !== 'completed';
+      return daysUntil <= 7 && c.status !== 'COMPLETED';
     })
-    .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+    .sort((a, b) => {
+      if (!a.deadline || !b.deadline) return 0;
+      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+    })
     .slice(0, 3);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // In a real app, you'd refresh data from your API here
-    setTimeout(() => setRefreshing(false), 1000);
+    await Promise.all([refetchCampaigns(), refetchPartners()]);
+    setRefreshing(false);
   };
 
   const formatCurrency = (amount: number) => {
@@ -57,7 +93,7 @@ export default function DashboardScreen() {
   };
 
   const renderLoadingState = () => (
-    <ScrollView 
+    <ScrollView
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
@@ -71,7 +107,7 @@ export default function DashboardScreen() {
             <View style={[styles.sectionTitleSkeleton, { backgroundColor: theme.colors.borderLight }]} />
             <View style={[styles.iconSkeleton, { backgroundColor: theme.colors.borderLight }]} />
           </View>
-          
+
           <View style={styles.statsGrid}>
             <View style={styles.statsRow}>
               <StatsCardSkeleton />
@@ -89,7 +125,7 @@ export default function DashboardScreen() {
           <View style={styles.sectionHeader}>
             <View style={[styles.sectionTitleSkeleton, { backgroundColor: theme.colors.borderLight }]} />
           </View>
-          
+
           <View style={styles.campaignsList}>
             {Array.from({ length: 3 }).map((_, index) => (
               <CampaignCardSkeleton key={index} />
@@ -103,7 +139,7 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {loading ? renderLoadingState() : (
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -137,7 +173,7 @@ export default function DashboardScreen() {
                 <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.overview}</Text>
                 <TrendingUp size={20} color={theme.colors.primary} />
               </View>
-              
+
               <View style={styles.statsGrid}>
                 <View style={styles.statsRow}>
                   <StatsCard
@@ -200,7 +236,7 @@ export default function DashboardScreen() {
               <View style={styles.sectionHeader}>
                 <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t.recentCampaigns}</Text>
               </View>
-              
+
               {recentCampaigns.length > 0 ? (
                 <View style={styles.campaignsList}>
                   {recentCampaigns.map(campaign => {
@@ -215,9 +251,9 @@ export default function DashboardScreen() {
                   })}
                 </View>
               ) : (
-                <View style={[styles.emptyState, { 
-                  backgroundColor: theme.colors.surface, 
-                  borderColor: theme.colors.borderLight 
+                <View style={[styles.emptyState, {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.borderLight
                 }]}>
                   <View style={[styles.emptyIcon, { backgroundColor: theme.isDark ? '#553C9A' : '#FAF5FF' }]}>
                     <Sparkles size={32} color={theme.colors.primary} />
