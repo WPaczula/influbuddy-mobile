@@ -7,6 +7,7 @@ import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider, useAuth } from '@/contexts/FirebaseAuthContext';
+import { AlertProvider } from '@/contexts/AlertContext';
 import * as SplashScreen from 'expo-splash-screen';
 import { View } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -93,7 +94,9 @@ export default function RootLayout() {
       <LanguageProvider>
         <ThemeProvider>
           <AuthProvider>
-            <RootLayoutContent />
+            <AlertProvider>
+              <RootLayoutContent />
+            </AlertProvider>
           </AuthProvider>
         </ThemeProvider>
       </LanguageProvider>

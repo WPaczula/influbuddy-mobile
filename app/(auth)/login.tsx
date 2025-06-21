@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
@@ -6,12 +6,14 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
+import { useAlert } from '@/contexts/AlertContext';
 import { Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, User } from 'lucide-react-native';
 
 export default function LoginScreen() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { signIn } = useAuth();
+  const { alert } = useAlert();
   const router = useRouter();
   const [email, setEmail] = useState('wojciech.paczula@gmail.com');
   const [password, setPassword] = useState('zaq1@WSX');
@@ -22,26 +24,21 @@ export default function LoginScreen() {
 
   const validateForm = () => {
     if (!email.trim()) {
-      Alert.alert(t.error, t.emailRequired);
+      alert(t.error, t.emailRequired, 'error');
       return false;
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      Alert.alert(t.error, t.validEmail);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      alert(t.error, t.validEmail, 'error');
       return false;
     }
-
     if (!password.trim()) {
-      Alert.alert(t.error, t.passwordRequired);
+      alert(t.error, t.passwordRequired, 'error');
       return false;
     }
-
     if (password.length < 6) {
-      Alert.alert(t.error, t.passwordMinLength);
+      alert(t.error, t.passwordMinLength, 'error');
       return false;
     }
-
     return true;
   };
 
@@ -51,32 +48,10 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       await signIn(email.trim(), password);
-      // Navigation will be handled by the auth context
-    } catch (error) {
-      console.error('Login error:', error);
-
-      // Extract specific error message
-      let errorMessage = t.loginError; // Default generic message
-
-      if (error instanceof Error) {
-        // Handle specific backend errors
-        if (error.message.includes('Invalid credentials') || error.message.includes('Unauthorized')) {
-          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
-        } else if (error.message.includes('User not found')) {
-          errorMessage = 'No account found with this email. Please check your email or create a new account.';
-        } else if (error.message.includes('Account locked') || error.message.includes('locked')) {
-          errorMessage = 'Your account has been temporarily locked. Please try again later.';
-        } else if (error.message.includes('Network request failed') || error.message.includes('Network error')) {
-          errorMessage = 'Network error. Please check your connection and try again.';
-        } else if (error.message.includes('Authentication required')) {
-          errorMessage = 'Server configuration error. Please try again later.';
-        } else if (error.message.trim() !== '') {
-          // Use the specific error message from the server
-          errorMessage = error.message;
-        }
-      }
-
-      Alert.alert('Login Failed', errorMessage);
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      const errorMessage = error.message || t.loginError;
+      alert('Login Failed', errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }

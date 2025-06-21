@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
+import { useAlert } from '@/contexts/AlertContext';
 import { useRouter } from 'expo-router';
 import { User, Bell, Shield, CircleHelp as HelpCircle, Star, LogOut, ChevronRight, Moon, Globe, Download, CreditCard as Edit, Save, X, Camera, Mail, Link as LinkIcon, Instagram, Youtube, Twitter, Check, Clock } from 'lucide-react-native';
 import { useCampaigns } from '@/hooks/queries/useCampaigns';
@@ -39,6 +40,7 @@ export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const { user, signOut, updateUserProfile } = useAuth();
+  const { alert, confirm } = useAlert();
   const { data: campaigns = [] } = useCampaigns();
   const { data: partners = [] } = usePartners();
   const router = useRouter();
@@ -111,12 +113,12 @@ export default function SettingsScreen() {
 
   const validateForm = () => {
     if (!editForm.name?.trim()) {
-      Alert.alert(t.error, t.nameRequired);
+      alert(t.error, t.nameRequired, 'error');
       return false;
     }
 
     if (editForm.website && editForm.website.trim() && !editForm.website.trim().startsWith('http')) {
-      Alert.alert(t.error, t.validWebsite);
+      alert(t.error, t.validWebsite, 'error');
       return false;
     }
 
@@ -140,31 +142,23 @@ export default function SettingsScreen() {
       });
       setShowProfileModal(false);
       setEditForm({});
-      Alert.alert(t.success, t.profileUpdated);
+      alert(t.success, t.profileUpdated, 'success');
     } catch (error) {
-      Alert.alert(t.error, t.updateProfileError);
+      alert(t.error, t.updateProfileError, 'error');
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleSignOut = () => {
-    // Skip confirmation alert for web, as it often doesn't work properly in Expo web
     if (Platform.OS === 'web') {
       performSignOut();
     } else {
-      // Show confirmation alert for mobile platforms
-      Alert.alert(
+      confirm(
         t.signOut,
         t.signOutConfirmation,
-        [
-          { text: t.cancel, style: 'cancel' },
-          {
-            text: t.signOut,
-            style: 'destructive',
-            onPress: performSignOut
-          }
-        ]
+        performSignOut,
+        () => { }
       );
     }
   };
@@ -173,12 +167,10 @@ export default function SettingsScreen() {
     setIsSigningOut(true);
     try {
       await signOut();
-      // The auth context will handle the navigation automatically
-      // But we can also explicitly navigate to ensure it happens
       router.replace('/(auth)/login');
     } catch (error) {
       console.error('Sign out error:', error);
-      Alert.alert(t.error, t.signOutError);
+      alert(t.error, t.signOutError, 'error');
     } finally {
       setIsSigningOut(false);
     }

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAlert } from '@/contexts/AlertContext';
 import { ArrowLeft, Calendar, DollarSign, Plus, X, ChevronDown, Building2, Check, Save } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCampaign, useUpdateCampaign } from '@/hooks/queries/useCampaigns';
@@ -24,10 +25,11 @@ interface CampaignForm {
 export default function EditCampaignScreen() {
   const { theme } = useTheme();
   const { t, language } = useLanguage();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { alert } = useAlert();
   const router = useRouter();
-  const { data: partners = [], isLoading: isLoadingPartners } = usePartners();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { data: campaign, isLoading: isLoadingCampaign, error } = useCampaign(id);
+  const { data: partners = [], isLoading: isLoadingPartners } = usePartners();
   const updateCampaignMutation = useUpdateCampaign();
 
   const [form, setForm] = useState<CampaignForm>({
@@ -91,27 +93,27 @@ export default function EditCampaignScreen() {
 
   const validateForm = () => {
     if (!form.title.trim()) {
-      Alert.alert(t.error, t.titleRequired);
+      alert(t.error, t.titleRequired, 'error');
       return false;
     }
     if (!form.description.trim()) {
-      Alert.alert(t.error, t.descriptionRequired);
+      alert(t.error, t.descriptionRequired, 'error');
       return false;
     }
     if (!form.partnerId) {
-      Alert.alert(t.error, t.selectPartnerRequired);
+      alert(t.error, t.selectPartnerRequired, 'error');
       return false;
     }
     if (!form.amount || isNaN(Number(form.amount.replace(/,/g, ''))) || Number(form.amount.replace(/,/g, '')) <= 0) {
-      Alert.alert(t.error, t.validAmount);
+      alert(t.error, t.validAmount, 'error');
       return false;
     }
     if (form.deadline <= form.startDate) {
-      Alert.alert(t.error, t.deadlineAfterStart);
+      alert(t.error, t.deadlineAfterStart, 'error');
       return false;
     }
     if (form.requirements.filter(req => req.trim()).length === 0) {
-      Alert.alert(t.error, t.oneRequirement);
+      alert(t.error, t.oneRequirement, 'error');
       return false;
     }
     return true;
@@ -120,26 +122,22 @@ export default function EditCampaignScreen() {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    setIsSubmitting(true);
     try {
       await updateCampaignMutation.mutateAsync({
-        id: campaign.id,
+        id,
         updates: {
           title: form.title.trim(),
           description: form.description.trim(),
           partnerId: form.partnerId,
           productValue: Number(form.amount.replace(/,/g, '')),
-          deadline: form.deadline.toISOString(),
           requirements: form.requirements.filter(req => req.trim()),
+          deadline: form.deadline.toISOString(),
         }
       });
 
-      // Navigate back to details screen
-      router.replace(`/campaigns/${campaign.id}`);
+      router.back();
     } catch (error) {
-      Alert.alert(t.error, t.updateCampaignError);
-    } finally {
-      setIsSubmitting(false);
+      alert(t.error, t.updateCampaignError, 'error');
     }
   };
 

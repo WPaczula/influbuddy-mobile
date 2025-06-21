@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAlert } from '@/contexts/AlertContext';
 import { useState, useEffect } from 'react';
 import { Partner } from '@/types';
 import { ArrowLeft, Save, Building2, Mail, Phone, Globe, FileText, User } from 'lucide-react-native';
@@ -20,6 +21,7 @@ interface PartnerForm {
 export default function EditPartnerScreen() {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { alert } = useAlert();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
 
@@ -114,31 +116,25 @@ export default function EditPartnerScreen() {
 
   const validateForm = () => {
     if (!form.company.trim()) {
-      Alert.alert(t.error, t.companyRequired);
+      alert(t.error, t.companyRequired, 'error');
       return false;
     }
     if (!form.name.trim()) {
-      Alert.alert(t.error, t.nameRequired);
+      alert(t.error, t.nameRequired, 'error');
       return false;
     }
     if (!form.email.trim()) {
-      Alert.alert(t.error, t.emailRequired);
+      alert(t.error, t.emailRequired, 'error');
       return false;
     }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email.trim())) {
-      Alert.alert(t.error, t.validEmail);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      alert(t.error, t.validEmail, 'error');
       return false;
     }
-
-    // Website validation if provided
-    if (form.website.trim() && !form.website.trim().startsWith('http')) {
-      Alert.alert(t.error, t.validWebsite);
+    if (form.website && form.website.trim() && !form.website.trim().startsWith('http')) {
+      alert(t.error, t.validWebsite, 'error');
       return false;
     }
-
     return true;
   };
 
@@ -148,21 +144,20 @@ export default function EditPartnerScreen() {
     setIsSubmitting(true);
     try {
       await updatePartnerMutation.mutateAsync({
-        id: partner.id,
+        id,
         updates: {
           company: form.company.trim(),
           name: form.name.trim(),
-          email: form.email.trim().toLowerCase(),
-          phone: form.phone.trim() || undefined,
-          website: form.website.trim() || undefined,
-          notes: form.notes.trim() || undefined,
+          email: form.email.trim(),
+          phone: form.phone?.trim() || undefined,
+          website: form.website?.trim() || undefined,
+          notes: form.notes?.trim() || undefined,
         }
       });
 
-      // Navigate back immediately after successful mutation
       router.back();
     } catch (error) {
-      Alert.alert(t.error, t.updatePartnerError);
+      alert(t.error, t.updatePartnerError, 'error');
     } finally {
       setIsSubmitting(false);
     }

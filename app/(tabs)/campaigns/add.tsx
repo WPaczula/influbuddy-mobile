@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAlert } from '@/contexts/AlertContext';
 import { useState } from 'react';
 import { ArrowLeft, Calendar, Plus, X, ChevronDown, Check, Save } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -22,6 +23,7 @@ interface CampaignForm {
 export default function AddCampaignScreen() {
   const { theme } = useTheme();
   const { t, language } = useLanguage();
+  const { alert } = useAlert();
   const router = useRouter();
   const { data: partners = [] } = usePartners();
   const createCampaign = useCreateCampaign();
@@ -56,27 +58,27 @@ export default function AddCampaignScreen() {
 
   const validateForm = () => {
     if (!form.title.trim()) {
-      Alert.alert(t.error, t.titleRequired);
+      alert(t.error, t.titleRequired, 'error');
       return false;
     }
     if (!form.description.trim()) {
-      Alert.alert(t.error, t.descriptionRequired);
+      alert(t.error, t.descriptionRequired, 'error');
       return false;
     }
     if (!form.partnerId) {
-      Alert.alert(t.error, t.selectPartnerRequired);
+      alert(t.error, t.selectPartnerRequired, 'error');
       return false;
     }
     if (!form.amount || isNaN(Number(form.amount.replace(/,/g, ''))) || Number(form.amount.replace(/,/g, '')) <= 0) {
-      Alert.alert(t.error, t.validAmount);
+      alert(t.error, t.validAmount, 'error');
       return false;
     }
     if (form.deadline <= form.startDate) {
-      Alert.alert(t.error, t.deadlineAfterStart);
+      alert(t.error, t.deadlineAfterStart, 'error');
       return false;
     }
     if (form.requirements.filter(req => req.trim()).length === 0) {
-      Alert.alert(t.error, t.oneRequirement);
+      alert(t.error, t.oneRequirement, 'error');
       return false;
     }
     return true;
@@ -98,7 +100,7 @@ export default function AddCampaignScreen() {
 
       router.push('/(tabs)/campaigns');
     } catch (error) {
-      Alert.alert(t.error, t.createCampaignError);
+      alert(t.error, t.createCampaignError, 'error');
     }
   };
 

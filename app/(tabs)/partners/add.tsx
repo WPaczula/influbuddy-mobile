@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAlert } from '@/contexts/AlertContext';
 import { useState } from 'react';
 import { ArrowLeft, Building2, Mail, Phone, Globe, FileText, User } from 'lucide-react-native';
 import { useCreatePartner } from '@/hooks/queries/usePartners';
@@ -19,6 +20,7 @@ interface PartnerForm {
 export default function AddPartnerScreen() {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { alert } = useAlert();
   const router = useRouter();
   const createPartner = useCreatePartner();
   const [form, setForm] = useState<PartnerForm>({
@@ -35,31 +37,25 @@ export default function AddPartnerScreen() {
 
   const validateForm = () => {
     if (!form.company.trim()) {
-      Alert.alert(t.error, t.companyRequired);
+      alert(t.error, t.companyRequired, 'error');
       return false;
     }
     if (!form.name.trim()) {
-      Alert.alert(t.error, t.nameRequired);
+      alert(t.error, t.nameRequired, 'error');
       return false;
     }
     if (!form.email.trim()) {
-      Alert.alert(t.error, t.emailRequired);
+      alert(t.error, t.emailRequired, 'error');
       return false;
     }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email.trim())) {
-      Alert.alert(t.error, t.validEmail);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      alert(t.error, t.validEmail, 'error');
       return false;
     }
-
-    // Website validation if provided
-    if (form.website.trim() && !form.website.trim().startsWith('http')) {
-      Alert.alert(t.error, t.validWebsite);
+    if (form.website && form.website.trim() && !form.website.trim().startsWith('http')) {
+      alert(t.error, t.validWebsite, 'error');
       return false;
     }
-
     return true;
   };
 
@@ -71,15 +67,15 @@ export default function AddPartnerScreen() {
       await createPartner.mutateAsync({
         company: form.company.trim(),
         name: form.name.trim(),
-        email: form.email.trim().toLowerCase(),
+        email: form.email.trim(),
         phone: form.phone.trim() || undefined,
-        website: form.website.trim() || undefined,
-        notes: form.notes.trim() || undefined,
+        website: form.website?.trim() || undefined,
+        notes: form.notes?.trim() || undefined,
       });
 
-      router.replace('/(tabs)/partners');
+      router.push('/(tabs)/partners');
     } catch (error) {
-      Alert.alert(t.error, t.addPartnerError);
+      alert(t.error, t.addPartnerError, 'error');
     } finally {
       setIsSubmitting(false);
     }

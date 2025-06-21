@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, Alert, Platform } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAlert } from '@/contexts/AlertContext';
 import { useRouter } from 'expo-router';
 import { LogOut } from 'lucide-react-native';
 
@@ -20,6 +21,7 @@ export default function LogoutButton({
   const { signOut } = useAuth();
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { confirm, alert } = useAlert();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,17 +31,11 @@ export default function LogoutButton({
       performLogout();
     } else {
       // Show confirmation alert for mobile platforms
-      Alert.alert(
+      confirm(
         t.signOut,
         t.signOutConfirmation,
-        [
-          { text: t.cancel, style: 'cancel' },
-          {
-            text: t.signOut,
-            style: 'destructive',
-            onPress: performLogout
-          }
-        ]
+        performLogout,
+        () => { } // Cancel action
       );
     }
   };
@@ -52,16 +48,12 @@ export default function LogoutButton({
     } catch (error) {
       console.error('Logout error:', error);
       // Even if logout fails, we still navigate to login since local storage is cleared
-      Alert.alert(
+      alert(
         'Warning',
         'Logout completed, but there may have been an issue with the server. You have been signed out locally.',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/(auth)/login')
-          }
-        ]
+        'warning'
       );
+      router.replace('/(auth)/login');
     } finally {
       setIsLoading(false);
     }
@@ -76,8 +68,8 @@ export default function LogoutButton({
         return [
           ...baseStyle,
           { backgroundColor: theme.colors.error },
-          isLoading && { opacity: 0.6 }
-        ];
+          ...(isLoading ? [{ opacity: 0.6 }] : [])
+        ] as any;
       case 'secondary':
         return [
           ...baseStyle,
@@ -86,14 +78,14 @@ export default function LogoutButton({
             borderWidth: 1,
             borderColor: theme.colors.error
           },
-          isLoading && { opacity: 0.6 }
-        ];
+          ...(isLoading ? [{ opacity: 0.6 }] : [])
+        ] as any;
       case 'text':
         return [
           ...baseStyle,
           { backgroundColor: 'transparent' },
-          isLoading && { opacity: 0.6 }
-        ];
+          ...(isLoading ? [{ opacity: 0.6 }] : [])
+        ] as any;
       default:
         return baseStyle;
     }
@@ -105,10 +97,10 @@ export default function LogoutButton({
 
     switch (variant) {
       case 'primary':
-        return [...baseStyle, { color: 'white' }];
+        return [...baseStyle, { color: 'white' }] as any;
       case 'secondary':
       case 'text':
-        return [...baseStyle, { color: theme.colors.error }];
+        return [...baseStyle, { color: theme.colors.error }] as any;
       default:
         return baseStyle;
     }

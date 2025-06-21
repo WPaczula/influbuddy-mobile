@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
@@ -6,45 +6,44 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
+import { useAlert } from '@/contexts/AlertContext';
 import { Mail, ArrowLeft, ArrowRight, Shield } from 'lucide-react-native';
+import { CheckCircle } from 'lucide-react-native';
 
 export default function ForgotPasswordScreen() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { resetPassword } = useAuth();
+  const { alert } = useAlert();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const styles = createStyles(theme);
 
-  const validateEmail = () => {
+  const validateForm = () => {
     if (!email.trim()) {
-      Alert.alert(t.error, t.emailRequired);
+      alert(t.error, t.emailRequired, 'error');
       return false;
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      Alert.alert(t.error, t.validEmail);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      alert(t.error, t.validEmail, 'error');
       return false;
     }
-
     return true;
   };
 
   const handleResetPassword = async () => {
-    if (!validateEmail()) return;
+    if (!validateForm()) return;
 
     setIsLoading(true);
     try {
       await resetPassword(email.trim());
-      setEmailSent(true);
-    } catch (error) {
-      console.error('Forgot password error:', error);
-      const errorMessage = error instanceof Error ? error.message : t.resetPasswordError;
-      Alert.alert(t.error, errorMessage);
+      setIsSuccess(true);
+    } catch (error: any) {
+      const errorMessage = error.message || t.resetPasswordError;
+      alert(t.error, errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -55,11 +54,11 @@ export default function ForgotPasswordScreen() {
   };
 
   const handleResendEmail = () => {
-    setEmailSent(false);
+    setIsSuccess(false);
     handleResetPassword();
   };
 
-  if (emailSent) {
+  if (isSuccess) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={[styles.header, { backgroundColor: theme.colors.surface }]}>

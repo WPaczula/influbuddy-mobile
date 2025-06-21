@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -10,9 +10,10 @@ import StatsCardSkeleton from '@/components/StatsCardSkeleton';
 import CampaignCard from '@/components/CampaignCard';
 import CampaignCardSkeleton from '@/components/CampaignCardSkeleton';
 import HeaderSkeleton from '@/components/HeaderSkeleton';
-import { DollarSign, ChartBar as BarChart3, Users, Clock, Sparkles, TrendingUp } from 'lucide-react-native';
+import { DollarSign, ChartBar as BarChart3, Users, Clock, Sparkles, TrendingUp, User } from 'lucide-react-native';
 import { useCampaigns } from '@/hooks/queries/useCampaigns';
 import { usePartners } from '@/hooks/queries/usePartners';
+import { useAlert } from '@/contexts/AlertContext';
 
 export default function DashboardScreen() {
   const { theme } = useTheme();
@@ -21,6 +22,7 @@ export default function DashboardScreen() {
   const { data: partners = [], isLoading: partnersLoading, refetch: refetchPartners } = usePartners();
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
+  const { alert } = useAlert();
 
   const styles = createStyles(theme);
 
@@ -306,14 +308,6 @@ function createStyles(theme: any) {
       fontFamily: 'Inter-Regular',
       color: 'rgba(255, 255, 255, 0.9)',
     },
-    headerIcon: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
     scrollContent: {
       paddingBottom: 32,
     },
@@ -395,6 +389,10 @@ function createStyles(theme: any) {
       textAlign: 'center',
       maxWidth: 280,
       lineHeight: 24,
+    },
+    headerIcon: {
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   });
 }

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
@@ -6,12 +6,14 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
+import { useAlert } from '@/contexts/AlertContext';
 import { Mail, Lock, Eye, EyeOff, User, ArrowLeft, ArrowRight, Building2 } from 'lucide-react-native';
 
 export default function RegisterScreen() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { signUp } = useAuth();
+  const { alert } = useAlert();
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
@@ -27,33 +29,33 @@ export default function RegisterScreen() {
 
   const validateForm = () => {
     if (!formData.name.trim()) {
-      Alert.alert(t.error, t.nameRequired);
+      alert(t.error, t.nameRequired, 'error');
       return false;
     }
 
     if (!formData.email.trim()) {
-      Alert.alert(t.error, t.emailRequired);
+      alert(t.error, t.emailRequired, 'error');
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email.trim())) {
-      Alert.alert(t.error, t.validEmail);
+      alert(t.error, t.validEmail, 'error');
       return false;
     }
 
     if (!formData.password.trim()) {
-      Alert.alert(t.error, t.passwordRequired);
+      alert(t.error, t.passwordRequired, 'error');
       return false;
     }
 
     if (formData.password.length < 6) {
-      Alert.alert(t.error, t.passwordMinLength);
+      alert(t.error, t.passwordMinLength, 'error');
       return false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      Alert.alert(t.error, t.passwordsDoNotMatch);
+      alert(t.error, t.passwordsDoNotMatch, 'error');
       return false;
     }
 
@@ -66,34 +68,10 @@ export default function RegisterScreen() {
     setIsLoading(true);
     try {
       await signUp(formData.email.trim(), formData.password, formData.name.trim());
-      // Navigation will be handled by the auth context
-    } catch (error) {
-      console.error('Registration error:', error);
-
-      // Extract specific error message
-      let errorMessage = t.registerError; // Default generic message
-
-      if (error instanceof Error) {
-        // Handle specific backend errors
-        if (error.message.includes('email already exists') || error.message.includes('already registered')) {
-          errorMessage = 'This email is already registered. Please use a different email or try logging in.';
-        } else if (error.message.includes('Password must contain')) {
-          errorMessage = 'Password must contain at least one uppercase letter, one lowercase letter, and one number or special character.';
-        } else if (error.message.includes('Password must be at least')) {
-          errorMessage = 'Password must be at least 8 characters long.';
-        } else if (error.message.includes('valid email')) {
-          errorMessage = 'Please provide a valid email address.';
-        } else if (error.message.includes('Network request failed') || error.message.includes('Network error')) {
-          errorMessage = 'Network error. Please check your connection and try again.';
-        } else if (error.message.includes('Authentication required') || error.message.includes('Unauthorized')) {
-          errorMessage = 'Server configuration error. Please try again later.';
-        } else if (error.message.trim() !== '') {
-          // Use the specific error message from the server
-          errorMessage = error.message;
-        }
-      }
-
-      Alert.alert('Registration Failed', errorMessage);
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      const errorMessage = error.message || t.registerError;
+      alert('Registration Failed', errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }

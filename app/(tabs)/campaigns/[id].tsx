@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking, Modal, TextInput, Share } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking, Modal, TextInput, Share, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -12,6 +12,7 @@ import CampaignDetailsSkeleton from '@/components/CampaignDetailsSkeleton';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { useCampaign, useAddPost, useUpdateCampaign } from '@/hooks/queries/useCampaigns';
 import { usePartners } from '@/hooks/queries/usePartners';
+import { useAlert } from '@/contexts/AlertContext';
 
 interface AddPostForm {
   url: string;
@@ -36,11 +37,12 @@ const CampaignDetailsScreen: React.FC = () => {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
 
   // Preload partners data
-  usePartners();
+  const { data: partners = [] } = usePartners();
 
-  const { data: campaign, isLoading } = useCampaign(id);
+  const { data: campaign, isLoading, error } = useCampaign(id);
   const addPostMutation = useAddPost();
   const updateCampaignMutation = useUpdateCampaign();
+  const { alert } = useAlert();
 
   const styles = createStyles(theme);
 
@@ -112,7 +114,7 @@ const CampaignDetailsScreen: React.FC = () => {
 
   const updateStatus = async (newStatus: 'DRAFT' | 'ACTIVE' | 'WAITING_FOR_PAYMENT' | 'COMPLETED' | 'CANCELLED') => {
     if (!campaign) {
-      Alert.alert(t.error, t.loadingError);
+      alert(t.error, t.loadingError);
       return;
     }
 
@@ -123,7 +125,7 @@ const CampaignDetailsScreen: React.FC = () => {
       });
     } catch (error) {
       console.error('Error updating campaign status:', error);
-      Alert.alert(t.error, t.updateCampaignError);
+      alert(t.error, t.updateCampaignError);
     }
   };
 
@@ -132,7 +134,7 @@ const CampaignDetailsScreen: React.FC = () => {
       await Linking.openURL(url);
     } catch (error) {
       console.error('Error opening link:', error);
-      Alert.alert(t.error, t.loadingError);
+      alert(t.error, t.loadingError);
     }
   };
 
@@ -247,15 +249,13 @@ const CampaignDetailsScreen: React.FC = () => {
 
   const handleSubmitPost = async () => {
     if (!validateUrl(postForm.url)) {
-      Alert.alert(t.error, t.validWebsite);
+      alert(t.error, t.validWebsite);
       return;
     }
-
     if (!campaign) {
-      Alert.alert(t.error, t.loadingError);
+      alert(t.error, t.loadingError);
       return;
     }
-
     try {
       await addPostMutation.mutateAsync({
         campaignId: campaign.id,
@@ -264,8 +264,6 @@ const CampaignDetailsScreen: React.FC = () => {
         postType: postForm.postType,
         description: postForm.description,
       });
-
-      // Reset form and close modal after successful mutation
       setPostForm({
         url: '',
         postType: 'post',
@@ -274,8 +272,7 @@ const CampaignDetailsScreen: React.FC = () => {
       });
       setShowAddPost(false);
     } catch (error) {
-      console.error('Error adding post:', error);
-      Alert.alert(t.error, t.updateCampaignError);
+      alert(t.error, t.updateCampaignError);
     }
   };
 
@@ -318,7 +315,7 @@ const CampaignDetailsScreen: React.FC = () => {
         title: `Campaign Update: ${campaign?.title || 'Campaign'}`
       });
     } catch (error) {
-      Alert.alert('Error', 'Failed to share summary');
+      alert('Error', 'Failed to share summary');
     }
   };
 

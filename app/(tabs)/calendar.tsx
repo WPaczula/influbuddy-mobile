@@ -1,12 +1,13 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert, Share } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAlert } from '@/contexts/AlertContext';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import CampaignCard from '@/components/CampaignCard';
 import CalendarSkeleton from '@/components/CalendarSkeleton';
-import React from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowLeft, Clock, Filter, Check, X, Download } from 'lucide-react-native';
 import { Partner } from '@/types';
 import { useCampaigns } from '@/hooks/queries/useCampaigns';
@@ -15,6 +16,7 @@ import { usePartners } from '@/hooks/queries/usePartners';
 export default function CalendarScreen() {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { alert } = useAlert();
   const { data: campaigns = [], isLoading: campaignsLoading } = useCampaigns();
   const { data: partners = [], isLoading: partnersLoading } = usePartners();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
@@ -332,7 +334,17 @@ export default function CalendarScreen() {
         title: `${t.campaignSummary} - ${monthName} ${year}`,
       });
     } catch (error) {
-      Alert.alert(t.error, 'Failed to generate summary');
+      alert(t.error, 'Failed to generate summary', 'error');
+    }
+  };
+
+  const handleGenerateSummary = async () => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Handle summary generation
+    } catch (error) {
+      alert(t.error, 'Failed to generate summary', 'error');
     }
   };
 
