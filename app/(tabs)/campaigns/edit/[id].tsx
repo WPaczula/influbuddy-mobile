@@ -104,7 +104,7 @@ export default function EditCampaignScreen() {
       alert(t.error, t.selectPartnerRequired, 'error');
       return false;
     }
-    if (!form.amount || isNaN(Number(form.amount.replace(/,/g, ''))) || Number(form.amount.replace(/,/g, '')) <= 0) {
+    if (!form.amount || isNaN(Number(form.amount.replace(/,/g, ''))) || Number(form.amount.replace(/,/g, '')) < 0) {
       alert(t.error, t.validAmount, 'error');
       return false;
     }
