@@ -60,7 +60,9 @@ export default function EditCampaignScreen() {
         amount: campaign.productValue?.toString() || '',
         startDate: new Date(),
         deadline: campaign.deadline ? new Date(campaign.deadline) : new Date(),
-        requirements: campaign.requirements && campaign.requirements.length > 0 ? campaign.requirements : [''],
+        requirements: campaign.requirements && campaign.requirements.length > 0
+          ? campaign.requirements.map((req: any) => typeof req === 'string' ? req : req.text)
+          : [''],
       });
       setIsLoaded(true);
     }
@@ -357,11 +359,11 @@ export default function EditCampaignScreen() {
             </TouchableOpacity>
           </View>
 
-          {form.requirements.map((requirement, index) => (
+          {form.requirements.map((requirement: any, index) => (
             <View key={index} style={styles.requirementRow}>
               <TextInput
                 style={[styles.input, styles.requirementInput, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text }]}
-                value={requirement}
+                value={typeof requirement === 'string' ? requirement : requirement.text}
                 onChangeText={(text) => updateRequirement(index, text)}
                 placeholder={`${t.requirementPlaceholder} ${index + 1}`}
                 placeholderTextColor={theme.colors.textTertiary}

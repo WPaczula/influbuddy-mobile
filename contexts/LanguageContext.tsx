@@ -218,6 +218,8 @@ export interface Translations {
   profileUpdated: string;
   partnerUpdated: string;
   campaignUpdated: string;
+  postAdded: string;
+  postRemoved: string;
 
   // Error Messages
   addPartnerError: string;
@@ -227,6 +229,9 @@ export interface Translations {
   updateCampaignError: string;
   loadingError: string;
   deletePartnerConfirm: string;
+  addPostError: string;
+  removePostError: string;
+  deletePostConfirm: string;
 
   // Authentication
   welcomeBack: string;
@@ -506,6 +511,8 @@ const englishTranslations: Translations = {
   profileUpdated: 'Profile updated successfully!',
   partnerUpdated: 'Partner updated successfully!',
   campaignUpdated: 'Campaign updated successfully!',
+  postAdded: 'Post added successfully!',
+  postRemoved: 'Post removed successfully!',
 
   // Error Messages
   addPartnerError: 'Failed to add partner. Please try again.',
@@ -515,6 +522,9 @@ const englishTranslations: Translations = {
   updateCampaignError: 'Failed to update campaign status',
   loadingError: 'Failed to load data',
   deletePartnerConfirm: 'Are you sure you want to delete this partner? This action cannot be undone.',
+  addPostError: 'Failed to add post. Please try again.',
+  removePostError: 'Failed to remove post. Please try again.',
+  deletePostConfirm: 'Are you sure you want to delete this post? This action cannot be undone.',
 
   // Authentication
   welcomeBack: 'Welcome back! 👋',
@@ -794,6 +804,8 @@ const polishTranslations: Translations = {
   profileUpdated: 'Profil został pomyślnie zaktualizowany!',
   partnerUpdated: 'Partner został pomyślnie zaktualizowany!',
   campaignUpdated: 'Kampania została pomyślnie zaktualizowana!',
+  postAdded: 'Post został pomyślnie dodany!',
+  postRemoved: 'Post został pomyślnie usunięty!',
 
   // Error Messages
   addPartnerError: 'Nie udało się dodać partnera. Spróbuj ponownie.',
@@ -803,6 +815,9 @@ const polishTranslations: Translations = {
   updateCampaignError: 'Nie udało się zaktualizować statusu kampanii',
   loadingError: 'Nie udało się załadować danych',
   deletePartnerConfirm: 'Czy na pewno chcesz usunąć tego partnera? Tej akcji nie można cofnąć.',
+  addPostError: 'Nie udało się dodać posta. Spróbuj ponownie.',
+  removePostError: 'Nie udało się usunąć posta. Spróbuj ponownie.',
+  deletePostConfirm: 'Czy na pewno chcesz usunąć ten post? Tej akcji nie można cofnąć.',
 
   // Authentication
   welcomeBack: 'Witaj ponownie! 👋',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking, Modal, TextInput, Share, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Modal, TextInput, Share, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -10,9 +10,9 @@ import { ArrowLeft, Calendar, DollarSign, ExternalLink, Building2, CircleCheck a
 import StatusBadge from '@/components/StatusBadge';
 import CampaignDetailsSkeleton from '@/components/CampaignDetailsSkeleton';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
-import { useCampaign, useAddPost, useUpdateCampaign } from '@/hooks/queries/useCampaigns';
+import { useCampaign, useAddPost, useUpdateCampaign, useRemovePost } from '@/hooks/queries/useCampaigns';
 import { usePartners } from '@/hooks/queries/usePartners';
-import { useAlert } from '@/contexts/AlertContext';
+import { useStyledAlert } from '@/hooks/useStyledAlert';
 
 interface AddPostForm {
   url: string;
@@ -42,7 +42,8 @@ const CampaignDetailsScreen: React.FC = () => {
   const { data: campaign, isLoading, error } = useCampaign(id);
   const addPostMutation = useAddPost();
   const updateCampaignMutation = useUpdateCampaign();
-  const { alert } = useAlert();
+  const removePostMutation = useRemovePost();
+  const { alert, confirmDestructive } = useStyledAlert();
 
   const styles = createStyles(theme);
 
@@ -114,7 +115,7 @@ const CampaignDetailsScreen: React.FC = () => {
 
   const updateStatus = async (newStatus: 'DRAFT' | 'ACTIVE' | 'WAITING_FOR_PAYMENT' | 'COMPLETED' | 'CANCELLED') => {
     if (!campaign) {
-      alert(t.error, t.loadingError);
+      alert(t.error, t.loadingError, 'error');
       return;
     }
 
@@ -125,7 +126,7 @@ const CampaignDetailsScreen: React.FC = () => {
       });
     } catch (error) {
       console.error('Error updating campaign status:', error);
-      alert(t.error, t.updateCampaignError);
+      alert(t.error, t.updateCampaignError, 'error');
     }
   };
 
@@ -134,7 +135,7 @@ const CampaignDetailsScreen: React.FC = () => {
       await Linking.openURL(url);
     } catch (error) {
       console.error('Error opening link:', error);
-      alert(t.error, t.loadingError);
+      alert(t.error, t.loadingError, 'error');
     }
   };
 
@@ -249,11 +250,11 @@ const CampaignDetailsScreen: React.FC = () => {
 
   const handleSubmitPost = async () => {
     if (!validateUrl(postForm.url)) {
-      alert(t.error, t.validWebsite);
+      alert(t.error, t.validWebsite, 'error');
       return;
     }
     if (!campaign) {
-      alert(t.error, t.loadingError);
+      alert(t.error, t.loadingError, 'error');
       return;
     }
     try {
@@ -271,9 +272,33 @@ const CampaignDetailsScreen: React.FC = () => {
         platform: 'instagram',
       });
       setShowAddPost(false);
+      alert(t.success, t.postAdded, 'success');
     } catch (error) {
-      alert(t.error, t.updateCampaignError);
+      alert(t.error, t.addPostError, 'error');
     }
+  };
+
+  const handleRemovePost = async (postId: string) => {
+    if (!campaign) {
+      alert(t.error, t.loadingError, 'error');
+      return;
+    }
+
+    confirmDestructive(
+      t.delete,
+      t.deletePostConfirm,
+      async () => {
+        try {
+          await removePostMutation.mutateAsync({
+            campaignId: campaign.id,
+            postId,
+          });
+          alert(t.success, t.postRemoved, 'success');
+        } catch (error) {
+          alert(t.error, t.removePostError, 'error');
+        }
+      }
+    );
   };
 
   const generateSummary = () => {
@@ -315,7 +340,7 @@ const CampaignDetailsScreen: React.FC = () => {
         title: `Campaign Update: ${campaign?.title || 'Campaign'}`
       });
     } catch (error) {
-      alert('Error', 'Failed to share summary');
+      alert(t.error, 'Failed to share summary', 'error');
     }
   };
 
@@ -391,10 +416,12 @@ const CampaignDetailsScreen: React.FC = () => {
           {campaign.requirements && campaign.requirements.length > 0 && (
             <View style={[styles.requirementsCard, { backgroundColor: theme.colors.surface }]}>
               <Text style={[styles.requirementsTitle, { color: theme.colors.text }]}>{t.requirements}</Text>
-              {campaign.requirements.map((requirement: string, index: number) => (
+              {campaign.requirements.map((requirement: any, index: number) => (
                 <View key={index} style={styles.requirementItem}>
                   <View style={[styles.requirementBullet, { backgroundColor: theme.colors.primary }]} />
-                  <Text style={[styles.requirementText, { color: theme.colors.textSecondary }]}>{requirement}</Text>
+                  <Text style={[styles.requirementText, { color: theme.colors.textSecondary }]}>
+                    {typeof requirement === 'string' ? requirement : requirement.text}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -514,11 +541,9 @@ const CampaignDetailsScreen: React.FC = () => {
           {campaign.socialLinks && campaign.socialLinks.length > 0 ? (
             <View style={styles.socialPostsList}>
               {campaign.socialLinks.map((link, index) => (
-                <TouchableOpacity
+                <View
                   key={link.id}
                   style={[styles.socialPostCard, { backgroundColor: theme.colors.surface }]}
-                  onPress={() => openLink(link.url)}
-                  activeOpacity={0.7}
                 >
                   <View style={styles.socialPostHeader}>
                     <View style={styles.socialPostInfo}>
@@ -534,8 +559,19 @@ const CampaignDetailsScreen: React.FC = () => {
                         </Text>
                       </View>
                     </View>
-                    <View style={[styles.socialPostAction, { backgroundColor: theme.colors.borderLight }]}>
-                      <ExternalLink size={16} color={theme.colors.textSecondary} />
+                    <View style={styles.socialPostActions}>
+                      <TouchableOpacity
+                        style={[styles.socialPostAction, { backgroundColor: theme.colors.borderLight }]}
+                        onPress={() => openLink(link.url)}
+                      >
+                        <ExternalLink size={16} color={theme.colors.textSecondary} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.socialPostAction, { backgroundColor: theme.colors.errorLight }]}
+                        onPress={() => handleRemovePost(link.id)}
+                      >
+                        <Trash2 size={16} color={theme.colors.error} />
+                      </TouchableOpacity>
                     </View>
                   </View>
 
@@ -552,7 +588,7 @@ const CampaignDetailsScreen: React.FC = () => {
                       {link.url}
                     </Text>
                   </View>
-                </TouchableOpacity>
+                </View>
               ))}
             </View>
           ) : (
@@ -1079,6 +1115,11 @@ function createStyles(theme: any) {
       fontSize: 12,
       fontFamily: 'Inter-Medium',
       textTransform: 'capitalize',
+    },
+    socialPostActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
     },
     socialPostAction: {
       padding: 8,

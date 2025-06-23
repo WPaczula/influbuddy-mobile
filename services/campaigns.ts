@@ -67,6 +67,16 @@ export const campaignsService = {
     }
   },
 
+  async removePost(campaignId: string, postId: string): Promise<Campaign> {
+    try {
+      const response = await api.delete<Campaign>(`campaigns/${campaignId}/posts/${postId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error removing post from campaign:', error);
+      throw error;
+    }
+  },
+
   async updatePosts(campaignId: string, postLinks: string[]): Promise<Campaign> {
     try {
       const response = await api.put<{ campaign: Campaign }>(`campaigns/${campaignId}/posts`, {

@@ -83,4 +83,19 @@ export function useAddPost() {
       queryClient.invalidateQueries({ queryKey: campaignKeys.detail(data.id) });
     },
   });
+}
+
+export function useRemovePost() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ campaignId, postId }: {
+      campaignId: string;
+      postId: string;
+    }) => campaignsService.removePost(campaignId, postId),
+    onSuccess: (data) => {
+      // Invalidate and refetch the campaign details
+      queryClient.invalidateQueries({ queryKey: campaignKeys.detail(data.id) });
+    },
+  });
 } 
