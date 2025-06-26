@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
@@ -7,7 +7,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/FirebaseAuthContext';
 import { useAlert } from '@/contexts/AlertContext';
-import { Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight, User } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, User } from 'lucide-react-native';
 
 export default function LoginScreen() {
   const { theme } = useTheme();
@@ -76,7 +76,7 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Header with Gradient */}
+          {/* Header with Gradient and Mascot */}
           <LinearGradient
             colors={['#D6BCFA', '#B794F6']}
             start={{ x: 0, y: 0 }}
@@ -84,15 +84,12 @@ export default function LoginScreen() {
             style={styles.headerGradient}
           >
             <View style={styles.header}>
-              <View style={styles.logoContainer}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.logoBackground}
-                >
-                  <Sparkles size={32} color="white" />
-                </LinearGradient>
+              <View style={styles.mascotContainer}>
+                <Image
+                  source={{ uri: '/assets/images/image.png' }}
+                  style={styles.mascotImage}
+                  resizeMode="contain"
+                />
               </View>
               <Text style={styles.welcomeTitle}>{t.welcomeBack}</Text>
               <Text style={styles.welcomeSubtitle}>{t.signInToContinue}</Text>
@@ -225,15 +222,13 @@ function createStyles(theme: any) {
       padding: 32,
       alignItems: 'center',
     },
-    logoContainer: {
+    mascotContainer: {
       marginBottom: 24,
-    },
-    logoBackground: {
-      width: 80,
-      height: 80,
-      borderRadius: 20,
-      justifyContent: 'center',
       alignItems: 'center',
+    },
+    mascotImage: {
+      width: 120,
+      height: 120,
     },
     welcomeTitle: {
       fontSize: 28,
